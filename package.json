@@ -1,0 +1,17 @@
+{
+  "name": "tpt-connect",
+  "version": "0.0.1",
+  "description": "",
+  "keywords": [],
+  "homepage": "https://github.com/tpt/tpt-connect",
+  "bugs": {
+    "url": "https://github.com/tpt/tpt-connect/issues"
+  },
+  "license": "MIT",
+  "main": "src/fallback-cache",
+  "repository": "tpt/tpt-connect",
+  "dependencies": {
+    "react-refetch": "^0.7.0-beta.2",
+    "whatwg-fetch": "^0.11.0"
+  }
+}
