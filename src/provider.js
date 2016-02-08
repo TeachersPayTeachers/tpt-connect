@@ -5,7 +5,10 @@ import { Component, PropTypes } from 'react';
  */
 export default class Provider extends Component {
   static childContextTypes = {
-    cache: PropTypes.object.isRequired
+    cache: PropTypes.shape({
+      get: PropTypes.func.isRequired,
+      set: PropTypes.func.isRequired
+    })
   };
 
   getChildContext() {

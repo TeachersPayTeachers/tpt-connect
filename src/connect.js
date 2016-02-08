@@ -82,7 +82,7 @@ export default function connect(mapPropsToRequestsToProps = () => ({})) {
               throw new TypeError(`TptConnect expected value to be of type
                 ${mapping.type.name}. Instead got ${value.constructor.name}`);
             }
-            if (!value._isCache && mapping.ttl) {
+            if (!value._isCache && mapping.ttl && mapping.method.toUpperCase() !== 'GET') {
               this.setCachedData(prop, mapping, value);
             }
             secondFunc(value);
