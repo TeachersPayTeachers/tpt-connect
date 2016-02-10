@@ -59,9 +59,9 @@ module.exports =
 	});
 	exports.connect = exports.Provider = undefined;
 	
-	var _provider = __webpack_require__(2);
+	var _Provider2 = __webpack_require__(2);
 	
-	var _provider2 = _interopRequireDefault(_provider);
+	var _Provider3 = _interopRequireDefault(_Provider2);
 	
 	var _connect2 = __webpack_require__(4);
 	
@@ -69,7 +69,7 @@ module.exports =
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
-	exports.Provider = _provider2.default;
+	exports.Provider = _Provider3.default;
 	exports.connect = _connect3.default;
 
 /***/ },
@@ -123,7 +123,10 @@ module.exports =
 	}(_react.Component);
 	
 	Provider.childContextTypes = {
-	  cache: _react.PropTypes.object.isRequired
+	  cache: _react.PropTypes.shape({
+	    get: _react.PropTypes.func.isRequired,
+	    set: _react.PropTypes.func.isRequired
+	  })
 	};
 	exports.default = Provider;
 	module.exports = exports['default'];
@@ -259,7 +262,7 @@ module.exports =
 	              if (mapping.type && !(value instanceof mapping.type)) {
 	                throw new TypeError('TptConnect expected value to be of type\n                ' + mapping.type.name + '. Instead got ' + value.constructor.name);
 	              }
-	              if (!value._isCache && mapping.ttl) {
+	              if (!value._isCache && mapping.ttl && mapping.method.toUpperCase() !== 'GET') {
 	                _this4.setCachedData(prop, mapping, value);
 	              }
 	              secondFunc(value);

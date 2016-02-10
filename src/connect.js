@@ -44,7 +44,7 @@ export default function connect(mapPropsToRequestsToProps = () => ({})) {
             // populating mapping.value will set it immediately w/out making the request
             mapping.value = this.getCachedData(prop, mapping);
             if (mapping.value) {
-              mapping.value._isCache = true;
+              mapping._isCache = true;
               // react-refetch won't allow value & url to be set together
               mapping.url = null;
             }
@@ -59,7 +59,7 @@ export default function connect(mapPropsToRequestsToProps = () => ({})) {
        */
       createInitialPromiseState(prop, mapping) {
         const defaultValue = mapping.default || (typeof mapping.type === 'function'
-          ? mapping.type()
+          ? new mapping.type() // eslint-disable-line new-cap
           : null);
 
         return (...args) => {
@@ -82,7 +82,7 @@ export default function connect(mapPropsToRequestsToProps = () => ({})) {
               throw new TypeError(`TptConnect expected value to be of type
                 ${mapping.type.name}. Instead got ${value.constructor.name}`);
             }
-            if (!value._isCache && mapping.ttl && mapping.method.toUpperCase() !== 'GET') {
+            if (!mapping._isCache && mapping.ttl && mapping.method.toUpperCase() === 'GET') {
               this.setCachedData(prop, mapping, value);
             }
             secondFunc(value);
