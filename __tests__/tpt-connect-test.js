@@ -3,18 +3,13 @@ import ReactDOM from 'react-dom';
 import TestUtils from 'react/lib/ReactTestUtils';
 import { Provider, connect } from '../src';
 
-const MINUTE = 10 * 60 * 1000;
+const MINUTE = 60 * 1000;
 
-const cache = (() => {
-  let _store = {};
-  return {
-    set: (key, val) => { _store[key] = val; },
-    get: (key) => (_store[key]),
-    length: () => (Object.keys(_store).length),
-    clear: () => { _store = {}; },
-    options: { ttl: null }
-  };
-})();
+let cacheStore = new function () {
+  const F = this.constructor;
+  F.prototype.clear = () => { cacheStore = new F; };
+  F.prototype.length = () => (Object.keys(this).length);
+};
 
 class _Component extends Component {
   componentDidMount() {
@@ -31,7 +26,7 @@ class _Component extends Component {
 function renderComponent(mappingFunc) {
   const NewComponent = connect(mappingFunc)(_Component);
   const component = TestUtils.renderIntoDocument(
-    <Provider cache={cache}>
+    <Provider store={cacheStore}>
       <NewComponent />
     </Provider>
   );
@@ -41,12 +36,12 @@ function renderComponent(mappingFunc) {
 
 // resolving promises seems to take a bit longer than "next tick"
 function defer(func) {
-  setTimeout(func, 100);
+  setTimeout(func, 200);
 }
 
 describe('tpt-connect', () => {
   beforeEach(() => {
-    cache.clear();
+    cacheStore.clear();
     spyOn(window, 'fetch').and.callFake(() => {
       return Promise.resolve(new Response(JSON.stringify({
         date: new Date
@@ -64,15 +59,27 @@ describe('tpt-connect', () => {
     });
 
     describe('when TTL is not given', () => {
-      it('does not cache response', (done) => {
+      it('still caches response (as other props that may need it)', (done) => {
         renderComponent(() => ({
           users: {
             url: 'http://url.com'
           }
         }));
         defer(() => {
-          expect(cache.length()).toEqual(0);
+          expect(cacheStore.length()).toEqual(1);
           done();
+        });
+      });
+
+      it('doesnt return the cached response', (done) => {
+        const mappingFunc = () => ({ users: 'http://url.com' });
+        const oldComp = renderComponent(mappingFunc);
+        defer(() => {
+          const newComp = renderComponent(mappingFunc);
+          defer(() => {
+            expect(newComp._props.users.value).not.toEqual(oldComp._props.users.value);
+            done();
+          });
         });
       });
     });
@@ -86,7 +93,7 @@ describe('tpt-connect', () => {
           }
         }));
         defer(() => {
-          expect(cache.length()).toEqual(1);
+          expect(cacheStore.length()).toEqual(1);
           done();
         });
       });
@@ -188,7 +195,7 @@ describe('tpt-connect', () => {
           }
         }));
         defer(() => {
-          expect(cache.length()).toEqual(0);
+          expect(cacheStore.length()).toEqual(0);
           done();
         });
       });

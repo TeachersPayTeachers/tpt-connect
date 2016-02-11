@@ -10,6 +10,14 @@ import { PropTypes } from 'react';
 import { connect as refetchConnect } from 'react-refetch';
 
 /**
+ * Generates cache key based on the `comparison` string provided or the
+ * request's URL.
+ */
+function _cacheKey(mapping) {
+  return mapping.comparison || mapping.url;
+}
+
+/**
  * Overrides react-refetch `connect` function so we can return TptConnect
  * component instead of RefetchConnect.
  */
@@ -19,7 +27,7 @@ export default function connect(mapPropsToRequestsToProps = () => ({})) {
     const RefetchConnect =
       refetchConnect(mapPropsToRequestsToProps)(WrappedComponent);
 
-    class TptConnect extends RefetchConnect {
+    return class TptConnect extends RefetchConnect {
       static contextTypes = {
         cache: PropTypes.object.isRequired
       };
@@ -42,7 +50,7 @@ export default function connect(mapPropsToRequestsToProps = () => ({})) {
           mapping = mappings[prop];
           if (!mapping.force && mapping.ttl) { // try to get cached data
             // populating mapping.value will set it immediately w/out making the request
-            mapping.value = this.getCachedData(prop, mapping);
+            mapping.value = this.cache.get(_cacheKey(mapping), mapping.ttl);
             if (mapping.value) {
               mapping._isCache = true;
               // react-refetch won't allow value & url to be set together
@@ -82,40 +90,13 @@ export default function connect(mapPropsToRequestsToProps = () => ({})) {
               throw new TypeError(`TptConnect expected value to be of type
                 ${mapping.type.name}. Instead got ${value.constructor.name}`);
             }
-            if (!mapping._isCache && mapping.ttl && mapping.method.toUpperCase() === 'GET') {
-              this.setCachedData(prop, mapping, value);
+            if (!mapping._isCache && mapping.method.toUpperCase() === 'GET') {
+              this.cache.set(_cacheKey(mapping), value);
             }
             secondFunc(value);
           };
         };
       }
-
-      /**
-       * Generates cache key based on the `comparison` string provided or the
-       * request's URL.
-       */
-      cacheKeyFor(prop, mapping) {
-        // TODO: ultimately, we should use ['value', 'url', 'method', 'headers',
-        // 'body'] to construct our comparison string (at least that's how
-        // react-refetch checks for mappings equality to determine if it needs to
-        // make anther request), but all we have at this point (before calling
-        // `coerceMappings` which is private) is the property name and the URL
-        const key = mapping.comparison || mapping.url;
-        return [this.constructor.name, prop, key].join(this.cache.options.prefixSeparator);
-      }
-
-      setCachedData(prop, mapping, value) {
-        this.cache.set(this.cacheKeyFor(prop, mapping), value);
-      }
-
-      getCachedData(prop, mapping) {
-        // TODO: this is hacky. it sets the cache expiration every time before
-        // we get the value so we dont end up w stale values
-        this.cache.options.expiration = mapping.ttl;
-        return this.cache.get(this.cacheKeyFor(prop, mapping));
-      }
-    }
-
-    return TptConnect;
+    };
   };
 }
