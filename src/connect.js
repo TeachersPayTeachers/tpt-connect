@@ -7,14 +7,31 @@
  */
 
 import { PropTypes } from 'react';
+import normalizeUrl from 'normalize-url';
 import { connect as refetchConnect } from 'react-refetch';
 
 /**
  * Generates cache key based on the `comparison` string provided or the
- * request's URL.
+ * request's URL and headers.
  */
 function _cacheKey(mapping) {
-  return mapping.comparison || mapping.url;
+  return mapping.comparison || (mapping.comparison =
+    // hash func courtesy of stackoverflow.com/a/7616484/3220101
+    Object.keys(mapping.headers)
+      .sort()
+      .reduce((str, k) => (str + k.toLowerCase() + mapping.headers[k]),
+        normalizeUrl(mapping.url))
+      .split('')
+      .reduce((hash, chr) => (((hash << 5) - hash) + chr.charCodeAt(0)), 0)
+      .toString(36));
+}
+
+function _handleResponse(response) {
+  // cloning response so we can be read multiple times (b/c cache)
+  const json = response.clone().json();
+  return response.status >= 200 && response.status < 300
+    ? json
+    : json.then((cause) => (Promise.reject(cause)));
 }
 
 /**
@@ -41,24 +58,40 @@ export default function connect(mapPropsToRequestsToProps = () => ({})) {
       }
 
       /**
-       * Allows using cache before defaulting to network to fetch value
+       * Allows getting/setting cache
+       * TODO: this is an almost exact copy of the original method
        * @override
        */
-      refetchDataFromMappings(mappings) {
-        let mapping;
-        Object.keys(mappings).forEach((prop) => {
-          mapping = mappings[prop];
-          if (!mapping.force && mapping.ttl) { // try to get cached data
-            // populating mapping.value will set it immediately w/out making the request
-            mapping.value = this.cache.get(_cacheKey(mapping), mapping.ttl);
-            if (mapping.value) {
-              mapping._isCache = true;
-              // react-refetch won't allow value & url to be set together
-              mapping.url = null;
-            }
+      createPromise(prop, mapping, startedAt) {
+        const meta = mapping.meta;
+        const initPS = this.createInitialPromiseState(prop, mapping);
+        const onFulfillment = this.createPromiseStateOnFulfillment(prop, mapping, startedAt);
+        const onRejection = this.createPromiseStateOnRejection(prop, mapping, startedAt);
+
+        if (mapping.value) {
+          this.setAtomicState(prop, startedAt, mapping, initPS(meta));
+          return Promise.resolve(mapping.value).then(onFulfillment(meta), onRejection(meta));
+        }
+
+        const request = new Request(mapping.url, { ...mapping });
+        meta.request = request;
+        this.setAtomicState(prop, startedAt, mapping, initPS(meta));
+
+        // the only addition to the original method
+        let fetched = this.cache.get(_cacheKey(mapping), mapping.ttl);
+        if (fetched) {
+          mapping._fromCache = true;
+        } else {
+          fetched = window.fetch(request);
+          if (mapping.method.toUpperCase() === 'GET') {
+            this.cache.set(_cacheKey(mapping), fetched);
           }
+        }
+
+        return fetched.then((response) => {
+          meta.response = response;
+          return fetched.then(_handleResponse).then(onFulfillment(meta), onRejection(meta));
         });
-        return super.refetchDataFromMappings(mappings);
       }
 
       /**
@@ -78,7 +111,7 @@ export default function connect(mapPropsToRequestsToProps = () => ({})) {
       }
 
       /**
-       * Allows storing network response in cache
+       * Allows rejecting promise on wrong response type
        * @override
        */
       createPromiseStateOnFulfillment(prop, mapping, startedAt) {
@@ -89,9 +122,6 @@ export default function connect(mapPropsToRequestsToProps = () => ({})) {
             if (mapping.type && !(value instanceof mapping.type)) {
               throw new TypeError(`TptConnect expected value to be of type
                 ${mapping.type.name}. Instead got ${value.constructor.name}`);
-            }
-            if (!mapping._isCache && mapping.method.toUpperCase() === 'GET') {
-              this.cache.set(_cacheKey(mapping), value);
             }
             secondFunc(value);
           };

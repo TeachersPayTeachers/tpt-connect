@@ -4,21 +4,22 @@
   "description": "",
   "keywords": [],
   "engines": {
-    "node": "4.x.x",
-    "npm": "3.x.x"
+    "node": ">=4.x.x",
+    "npm": ">=3.x.x"
   },
   "homepage": "https://github.com/tpt/tpt-connect",
   "bugs": {
     "url": "https://github.com/tpt/tpt-connect/issues"
   },
   "license": "MIT",
-  "main": "dist/index",
+  "main": "dist/tpt-connect.js",
   "repository": "tpt/tpt-connect",
   "scripts": {
     "build": "webpack",
     "test": "karma start"
   },
   "dependencies": {
+    "normalize-url": "^1.4.0",
     "react-refetch": "^0.7.0-beta.2",
     "whatwg-fetch": "^0.11.0"
   },

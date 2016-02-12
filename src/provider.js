@@ -2,11 +2,11 @@ import { Component, PropTypes } from 'react';
 import Cache from './cache';
 
 /**
- * Used to create a context so our children can access our cache store
+ * Used to create a context so our children can access our cache
  */
 export default class Provider extends Component {
   static propTypes = {
-    store: PropTypes.object.isRequired
+    store: PropTypes.object
   };
 
   static childContextTypes = {

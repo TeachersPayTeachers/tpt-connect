@@ -12,8 +12,7 @@ $ npm install --save @tpt/tpt-connect # TODO: is this the real name?
 
 ## Usage
 
-Wrap your root component inside `Provider` and provide it with your cache store
-as a property:
+Wrap your root component inside `Provider`:
 
 ```JavaScript
 import { Provider } from 'tpt-connect';
@@ -21,18 +20,13 @@ import { Provider } from 'tpt-connect';
 class App extends Component {
   render() {
     return (
-      <Provider cache={new CacheStore}>
+      <Provider>
         <Routes /> // or what have you
       </Provider>
     )
   }
 }
 ```
-
-**NOTE:** `CacheStore`'s interface must implement two methods:
-
-1. `set(key, val)`
-2. `get(key)`
 
 And in your components throughout the app:
 

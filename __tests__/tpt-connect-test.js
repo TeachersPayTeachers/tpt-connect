@@ -5,43 +5,44 @@ import { Provider, connect } from '../src';
 
 const MINUTE = 60 * 1000;
 
-let cacheStore = new function () {
-  const F = this.constructor;
-  F.prototype.clear = () => { cacheStore = new F; };
-  F.prototype.length = () => (Object.keys(this).length);
-};
-
 class _Component extends Component {
   componentDidMount() {
-    this.refs.me._props = this.props;
+    this.exposeProps();
   }
   componentDidUpdate() {
-    this.componentDidMount();
+    this.exposeProps();
+  }
+  exposeProps() { // TODO: is there a better way?
+    this.refs.me._props = this.props;
   }
   render() {
     return (<img ref="me" />);
   }
 }
 
+let _store = {};
+
 function renderComponent(mappingFunc) {
   const NewComponent = connect(mappingFunc)(_Component);
-  const component = TestUtils.renderIntoDocument(
-    <Provider store={cacheStore}>
+  const provider = TestUtils.renderIntoDocument(
+    <Provider store={_store}>
       <NewComponent />
     </Provider>
   );
 
-  return ReactDOM.findDOMNode(component);
+  return { provider, domElement: ReactDOM.findDOMNode(provider) };
 }
 
-// resolving promises seems to take a bit longer than "next tick"
+// TODO: resolving promises seems to take a bit longer than "next tick"
+// also browser is so incosistent with this. need to just invoke expectations
+// after promise resolves
 function defer(func) {
-  setTimeout(func, 200);
+  setTimeout(func, 100);
 }
 
 describe('tpt-connect', () => {
   beforeEach(() => {
-    cacheStore.clear();
+    _store = {};
     spyOn(window, 'fetch').and.callFake(() => {
       return Promise.resolve(new Response(JSON.stringify({
         date: new Date
@@ -52,84 +53,102 @@ describe('tpt-connect', () => {
     });
   });
 
-  describe('GET requests', () => {
+  describe('GET request', () => {
     it('retrieves data', () => {
       renderComponent(() => ({ users: 'http://url.com' }));
       expect(window.fetch.calls.count()).toEqual(1);
     });
 
     describe('when TTL is not given', () => {
-      it('still caches response (as other props that may need it)', (done) => {
-        renderComponent(() => ({
-          users: {
-            url: 'http://url.com'
-          }
-        }));
-        defer(() => {
-          expect(cacheStore.length()).toEqual(1);
-          done();
-        });
+      it('still caches promise (as other components may need it)', () => {
+        const { provider: { cache } } = renderComponent(() => ({ users: 'http://url.com' }));
+        expect(cache.length).toEqual(1);
       });
 
-      it('doesnt return the cached response', (done) => {
+      it('doesnt return the cached promise', () => {
         const mappingFunc = () => ({ users: 'http://url.com' });
-        const oldComp = renderComponent(mappingFunc);
+        const { domElement } = renderComponent(mappingFunc);
         defer(() => {
-          const newComp = renderComponent(mappingFunc);
-          defer(() => {
-            expect(newComp._props.users.value).not.toEqual(oldComp._props.users.value);
-            done();
-          });
+          expect(domElement._props.users.value)
+            .not.toEqual(renderComponent(mappingFunc).domElement._props.users.value);
         });
       });
     });
 
     describe('when TTL is given', () => {
-      it('caches response for TTL milliseconds', (done) => {
-        renderComponent(() => ({
+      it('caches response for TTL milliseconds', () => {
+        const { provider: { cache } } = renderComponent(() => ({
           users: {
             url: 'http://url.com',
             ttl: MINUTE
           }
         }));
-        defer(() => {
-          expect(cacheStore.length()).toEqual(1);
-          done();
-        });
+        expect(cache.length).toEqual(1);
       });
     });
 
     describe('when there is a valid cache', () => {
-      it('returns the cached data w/out making request', (done) => {
-        const oldComp = renderComponent(() => ({
+      it('returns the cached data w/out making additional request', (done) => {
+        const { domElement: oldComp } = renderComponent(() => ({ users: 'http://url.com' }));
+        const { domElement: newComp } = renderComponent(() => ({
           users: {
             url: 'http://url.com',
             ttl: MINUTE
           }
         }));
+        expect(window.fetch.calls.count()).toEqual(1);
         defer(() => {
-          const newComp = renderComponent(() => ({
+          expect(newComp._props.users.value).toEqual(oldComp._props.users.value);
+          done();
+        });
+      });
+
+      describe('when the url is not normalized', () => {
+        it('still returns the cached promise', () => {
+          [
+            'HTTP://urL.COM',
+            'http://www.url.com',
+            'http://url.com/',
+            'http://url.com?',
+            'url.com/?'
+          ].forEach((url) => renderComponent(() => ({ users: { url, ttl: MINUTE } })));
+          expect(window.fetch.calls.count()).toEqual(1);
+        });
+      });
+
+      describe('when the headers are ordered differently', () => {
+        it('still returns the cached promise', () => {
+          [
+            { 'Content-Type': 'application/json', Accept: 'application/json' },
+            { Accept: 'application/json', 'Content-Type': 'application/json' }
+          ].forEach((headers) => renderComponent(() => ({
             users: {
               url: 'http://url.com',
+              headers,
               ttl: MINUTE
             }
-          }));
+          })));
           expect(window.fetch.calls.count()).toEqual(1);
-          defer(() => {
-            expect(newComp._props.users.value).toEqual(oldComp._props.users.value);
-            done();
-          });
         });
       });
     });
 
-    describe('when there isnt a valid cached response', () => {
-      it('makes a request to server', (done) => {
-        renderComponent(() => ({ users: 'http://url.com' }));
-        defer(() => {
-          renderComponent(() => ({ users: 'http://url.com' }));
+    describe('when there isnt a valid cached promise', () => {
+      describe('when the url is different', () => {
+        it('makes all requests to server', () => {
+          ['http://url.com', 'http://url2.com'].forEach((url) => {
+            renderComponent(() => ({ users: url }));
+          });
           expect(window.fetch.calls.count()).toEqual(2);
-          done();
+        });
+      });
+
+      describe('when the url is the same but headers are different', () => {
+        it('makes all requests to server', () => {
+          [{ 'X-Secret': 'Shhh' }, { 'X-Secret': 'blah' }].forEach((headers) => {
+            renderComponent(() => ({ users: { headers, url: 'http://url.com' } }));
+          });
+          expect(window.fetch.calls.count()).toEqual(2);
         });
       });
     });
@@ -137,13 +156,13 @@ describe('tpt-connect', () => {
     describe('when default value is given', () => {
       it('provides default value until request finished', () => {
         const defaultValue = { default: 'value' };
-        const component = renderComponent(() => ({
+        const { domElement } = renderComponent(() => ({
           users: {
             url: 'http://url.com',
             default: defaultValue
           }
         }));
-        expect(component._props.users.value).toEqual(defaultValue);
+        expect(domElement._props.users.value).toEqual(defaultValue);
       });
     });
 
@@ -163,18 +182,18 @@ describe('tpt-connect', () => {
       });
 
       it('sets the default value to empty of `type` if default value isnt provided', () => {
-        const component = renderComponent(() => ({
+        const { domElement } = renderComponent(() => ({
           users: {
             url: 'http://url.com',
             type: Object
           }
         }));
-        expect(component._props.users.value).toEqual({});
+        expect(domElement._props.users.value).toEqual({});
       });
     });
   });
 
-  describe('POST requests', () => {
+  describe('POST request', () => {
     it('retrieves data', () => {
       renderComponent(() => ({
         users: {
@@ -186,18 +205,15 @@ describe('tpt-connect', () => {
     });
 
     describe('when TTL is given', () => {
-      it('still does NOT cache the response', (done) => {
-        renderComponent(() => ({
+      it('still does NOT cache the promise', () => {
+        const { provider: { cache } } = renderComponent(() => ({
           users: {
             url: 'http://url.com',
             method: 'POST',
             ttl: MINUTE
           }
         }));
-        defer(() => {
-          expect(cacheStore.length()).toEqual(0);
-          done();
-        });
+        expect(cache.length).toEqual(0);
       });
     });
   });
