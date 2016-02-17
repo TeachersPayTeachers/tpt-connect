@@ -1,26 +1,26 @@
 import { Component, PropTypes } from 'react';
-import Cache from './cache';
+import Store from './store';
 
 /**
  * Used to create a context so our children can access our cache
  */
 export default class Provider extends Component {
   static propTypes = {
-    store: PropTypes.object
+    state: PropTypes.object
   };
 
   static childContextTypes = {
-    cache: PropTypes.instanceOf(Cache).isRequired
+    store: PropTypes.instanceOf(Store).isRequired
   };
 
   constructor(props, context) {
     super(props, context);
-    this.cache = new Cache(this.props.store);
+    this.store = new Store(this.props.state);
   }
 
   getChildContext() {
     return {
-      cache: this.cache
+      store: this.store
     };
   }
 

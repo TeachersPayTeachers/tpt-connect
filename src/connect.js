@@ -1,6 +1,6 @@
 /**
  * TptConnect adds the following attributes to each mapping:
- * - ttl - for how long should the mapping be cached. If not provided, no caching will be used.
+ * - ttl - for how long should the mapping be stored. If not provided, no caching will be used.
  * - type - will validate we get the correct type or else reject the promise.
  *   also used to set default value if missing
  * - default - default value to populate the `value` property of the promise with
@@ -9,25 +9,24 @@
 import { PropTypes } from 'react';
 import normalizeUrl from 'normalize-url';
 import { connect as refetchConnect } from 'react-refetch';
+import crypto from 'crypto';
 
 /**
- * Generates cache key based on the `comparison` string provided or the
+ * Generates store key based on the `comparison` string provided or the
  * request's URL and headers.
  */
-function _cacheKey(mapping) {
+function _storeKey(mapping) {
   return mapping.comparison || (mapping.comparison =
-    // hash func courtesy of stackoverflow.com/a/7616484/3220101
     Object.keys(mapping.headers)
       .sort()
-      .reduce((str, k) => (str + k.toLowerCase() + mapping.headers[k]),
-        normalizeUrl(mapping.url))
-      .split('')
-      .reduce((hash, chr) => (((hash << 5) - hash) + chr.charCodeAt(0)), 0)
-      .toString(36));
+      .reduce((hash, k) =>
+        hash.update(`${k.toLowerCase()}:${mapping.headers[k]}`)
+      , crypto.createHash('md5').update(normalizeUrl(mapping.url)))
+      .digest('hex'));
 }
 
 function _handleResponse(response) {
-  // cloning response so we can be read multiple times (b/c cache)
+  // cloning response so we can be read multiple times (b/c store)
   const json = response.clone().json();
   return response.status >= 200 && response.status < 300
     ? json
@@ -46,7 +45,7 @@ export default function connect(mapPropsToRequestsToProps = () => ({})) {
 
     return class TptConnect extends RefetchConnect {
       static contextTypes = {
-        cache: PropTypes.object.isRequired
+        store: PropTypes.object.isRequired
       };
 
       /**
@@ -54,11 +53,11 @@ export default function connect(mapPropsToRequestsToProps = () => ({})) {
        */
       constructor(props, context) {
         super(props, context);
-        this.cache = context.cache;
+        this.store = context.store;
       }
 
       /**
-       * Allows getting/setting cache
+       * Allows getting/setting store
        * TODO: this is an almost exact copy of the original method
        * @override
        */
@@ -78,13 +77,13 @@ export default function connect(mapPropsToRequestsToProps = () => ({})) {
         this.setAtomicState(prop, startedAt, mapping, initPS(meta));
 
         // the only addition to the original method
-        let fetched = this.cache.get(_cacheKey(mapping), mapping.ttl);
+        let fetched = this.store.get(_storeKey(mapping), mapping.ttl);
         if (fetched) {
-          mapping._fromCache = true;
+          mapping._fromStore = true;
         } else {
           fetched = window.fetch(request);
           if (mapping.method.toUpperCase() === 'GET') {
-            this.cache.set(_cacheKey(mapping), fetched);
+            this.store.set(_storeKey(mapping), fetched);
           }
         }
 
