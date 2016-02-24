@@ -1,2 +1,3 @@
-export Provider from './Provider';
-export connect from './connect';
+export connect from './components/connect';
+export * from './helpers';
+export * from 'normalizr';
