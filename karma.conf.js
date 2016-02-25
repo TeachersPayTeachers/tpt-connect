@@ -6,7 +6,7 @@ module.exports = function (config) {
       'PhantomJS'
     ],
     files: [
-      'node_modules/babel-polyfill/dist/polyfill.js',
+      'isomorphic-fetch',
       'tests.webpack.js'
     ],
     preprocessors: {

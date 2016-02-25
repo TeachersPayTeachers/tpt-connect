@@ -115,7 +115,7 @@ These are the options each resource definition takes:
 
 - `body` (`Object`, optional) - the request's payload.
 
-- `resource` (`Object`, optional) - a resource definition this definition
+- `extends` (`Object`, optional) - a resource definition this definition
   inherits from. This is useful to centralize resource definitions to be
   used across multiple components.
 

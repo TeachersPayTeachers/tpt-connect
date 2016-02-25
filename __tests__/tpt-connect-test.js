@@ -1,9 +1,10 @@
+import './support/fetch-mock.js';
+import 'babel-polyfill';
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import TestUtils from 'react/lib/ReactTestUtils';
-import { Provider, connect } from '../src';
-
-const MINUTE = 60 * 1000;
+import { Provider } from 'react-redux';
+import { connect, createStore, Schema, arrayOf } from '../src';
 
 class _Component extends Component {
   componentDidMount() {
@@ -20,31 +21,43 @@ class _Component extends Component {
   }
 }
 
-let _state = {};
+const userSchema = new Schema('user');
+const resourceDefinition = {
+  schema: userSchema,
+  url: 'http://tpt.com/id'
+};
 
-function renderComponent(mappingFunc) {
-  const NewComponent = connect(mappingFunc)(_Component);
-  const provider = TestUtils.renderIntoDocument(
-    <Provider state={_state}>
-      <NewComponent />
-    </Provider>
-  );
+let store;
+let provider;
+let domElement;
 
-  return { provider, domElement: ReactDOM.findDOMNode(provider) };
-}
-
-// TODO: resolving promises seems to take a bit longer than "next tick"
-// also browser is so incosistent with this. need to just invoke expectations
-// after promise resolves
 function defer(func) {
   setTimeout(func, 100);
 }
 
+function renderComponent(mappingFunc) {
+  mappingFunc || (mappingFunc = () => ({
+    resources: {
+      user: resourceDefinition
+    }
+  }));
+
+  const NewComponent = connect(mappingFunc)(_Component);
+  provider = TestUtils.renderIntoDocument(
+    <Provider store={store}>
+      <NewComponent />
+    </Provider>
+  );
+  domElement = ReactDOM.findDOMNode(provider);
+}
+
 describe('tpt-connect', () => {
   beforeEach(() => {
-    _state = {};
-    spyOn(window, 'fetch').and.callFake(() => {
+    store = createStore((state = {}) => (state));
+    window.fetch.calls.reset();
+    window.fetch.and.callFake(() => {
       return Promise.resolve(new Response(JSON.stringify({
+        id: 3,
         date: Date.now()
       }), {
         headers: { 'Content-Type': 'application/json' },
@@ -53,179 +66,258 @@ describe('tpt-connect', () => {
     });
   });
 
-  describe('Store', () => {
-    it('dumps data as stringified json', () => {
-      const { provider: { store } } = renderComponent(() => ({ users: 'http://url.com' }));
-      expect(JSON.parse(store.dump())).toEqual(jasmine.any(String));
+  // TODO: add test cases for when resource is not indexable (no key)
+
+  it('populates the prop with a default value', () => {
+    renderComponent();
+    expect(domElement._props.user).toEqual(jasmine.any(Object));
+  });
+
+  it('completes the resource definition with its resource defaults', () => {
+    renderComponent();
+    expect(domElement._props.resources.user.method).toEqual('GET');
+  });
+
+  it('does not intervene with normal Redux functionality', (done) => {
+    const spyReducer = jasmine.createSpy().and.callFake((state = {}) => (state));
+    store = createStore(spyReducer);
+    renderComponent();
+    defer(() => {
+      expect(spyReducer).toHaveBeenCalled();
+      done();
     });
   });
 
-  describe('GET request', () => {
-    it('retrieves data', () => {
-      renderComponent(() => ({ users: 'http://url.com' }));
-      expect(window.fetch.calls.count()).toEqual(1);
-    });
-
-    describe('when TTL is not given', () => {
-      it('still stores promise (as other components may need it)', () => {
-        const { provider: { store } } = renderComponent(() => ({ users: 'http://url.com' }));
-        expect(store.length).toEqual(1);
-      });
-
-      it('doesnt return the stored promise', () => {
-        const mappingFunc = () => ({ users: 'http://url.com' });
-        const { domElement } = renderComponent(mappingFunc);
-        defer(() => {
-          expect(domElement._props.users.value)
-            .not.toEqual(renderComponent(mappingFunc).domElement._props.users.value);
+  describe('GET requests', () => {
+    describe('when server returned an error', () => {
+      beforeEach(() => {
+        window.fetch.and.callFake(() => {
+          return Promise.resolve(new Response(JSON.stringify({
+            id: 3,
+            error: 'This is an error'
+          }), {
+            headers: { 'Content-Type': 'application/json' },
+            status: 404
+          }));
         });
       });
-    });
 
-    describe('when TTL is given', () => {
-      it('stores response for TTL milliseconds', () => {
-        const { provider: { store } } = renderComponent(() => ({
-          users: {
-            url: 'http://url.com',
-            ttl: MINUTE
-          }
-        }));
-        expect(store.length).toEqual(1);
-      });
-    });
-
-    describe('when there is a valid store', () => {
-      it('returns the stored data w/out making additional request', (done) => {
-        const { domElement: oldComp } = renderComponent(() => ({ users: 'http://url.com' }));
-        const { domElement: newComp } = renderComponent(() => ({
-          users: {
-            url: 'http://url.com',
-            ttl: MINUTE
-          }
-        }));
-        expect(window.fetch.calls.count()).toEqual(1);
+      it('sets the meta.isError flag to true', (done) => {
+        renderComponent();
         defer(() => {
-          expect(newComp._props.users.value).toEqual(oldComp._props.users.value);
+          expect(domElement._props.user._meta.isError).toBe(true);
           done();
         });
       });
 
-      describe('when the url is not normalized', () => {
-        it('still returns the stored promise', () => {
-          [
-            'HTTP://urL.COM',
-            'http://www.url.com',
-            'http://url.com/',
-            'http://url.com?',
-            'url.com/?'
-          ].forEach((url) => renderComponent(() => ({ users: { url, ttl: MINUTE } })));
-          expect(window.fetch.calls.count()).toEqual(1);
-        });
-      });
-
-      describe('when the headers are ordered differently', () => {
-        it('still returns the stored promise', () => {
-          [
-            { 'Content-Type': 'application/json', Accept: 'application/json' },
-            { Accept: 'application/json', 'Content-Type': 'application/json' }
-          ].forEach((headers) => renderComponent(() => ({
-            users: {
-              url: 'http://url.com',
-              headers,
-              ttl: MINUTE
-            }
-          })));
-          expect(window.fetch.calls.count()).toEqual(1);
+      it('returns the error instead of the resource', (done) => {
+        renderComponent();
+        defer(() => {
+          expect(domElement._props.user.error).toEqual('This is an error');
+          done();
         });
       });
     });
 
-    describe('when there isnt a valid stored promise', () => {
-      describe('when the url is different', () => {
-        it('makes all requests to server', () => {
-          ['http://url.com', 'http://url2.com'].forEach((url) => {
-            renderComponent(() => ({ users: { url, ttl: MINUTE } }));
+    describe('when data is in state', () => {
+      describe('NOT stale', () => {
+        it('retrieves the data from state', (done) => {
+          renderComponent();
+          renderComponent();
+          defer(() => {
+            expect(window.fetch.calls.count()).toEqual(1);
+            done();
           });
+        });
+
+        it('sends another request if used the `fetchResource` method', (done) => {
+          renderComponent();
+          domElement._props.fetchResource({ ...resourceDefinition, ...{ method: 'GET' } });
+          defer(() => {
+            expect(window.fetch.calls.count()).toEqual(2);
+            done();
+          });
+        });
+        describe('when the url is not normalized', () => {
+          it('still returns the stored data', (done) => {
+            [
+              'http://url.com',
+              'http://www.url.com',
+              'http://url.com/',
+              'http://url.com?',
+              'url.com/?'
+            ].forEach((url) => {
+              renderComponent(() => ({
+                resources: {
+                  users: {
+                    url,
+                    schema: arrayOf(userSchema)
+                  }
+                }
+              }));
+            });
+            defer(() => {
+              expect(window.fetch.calls.count()).toEqual(1);
+              done();
+            });
+          });
+        });
+
+        describe('when the headers are ordered differently', () => {
+          it('still returns the stored data', (done) => {
+            [
+              { 'Content-Type': 'application/json', Accept: 'application/json' },
+              { Accept: 'application/json', 'Content-Type': 'application/json' }
+            ].forEach((headers) => {
+              renderComponent(() => ({
+                resources: {
+                  users: {
+                    url: 'http://url.com',
+                    headers,
+                    schema: arrayOf(userSchema)
+                  }
+                }
+              }));
+            });
+            defer(() => {
+              expect(window.fetch.calls.count()).toEqual(1);
+              done();
+            });
+          });
+        });
+      });
+    });
+
+    describe('when data is NOT in state', () => {
+      it('refetches it', (done) => {
+        renderComponent(() => ({
+          resources: { item: { url: 'tpt.com/item', schema: new Schema('item') } }
+        }));
+        renderComponent();
+        defer(() => {
           expect(window.fetch.calls.count()).toEqual(2);
+          done();
+        });
+      });
+
+      it('stores in state', (done) => {
+        renderComponent();
+        defer(() => {
+          const state = provider.props.store.getState().connect;
+          expect(Object.keys(state.paramsToResources).length).toEqual(1);
+          expect(Object.keys(state.resources.user).length).toEqual(1);
+          done();
+        });
+      });
+
+      it('fires the request automatically when mounted', (done) => {
+        renderComponent();
+        defer(() => {
+          expect(window.fetch.calls.count()).toEqual(1);
+          done();
+        });
+      });
+
+      it('fires the request automatically when relevant props change', (done) => {
+        const mapFunc = (state) => {
+          return {
+            resources: {
+              users: {
+                schema: arrayOf(userSchema),
+                url: `http://tpt.com/users/?query=${state.routing.query}`
+              }
+            }
+          };
+        };
+
+        store = createStore((state = {}, action) => {
+          return action.type === 'query change'
+            ? { ...action, ...state }
+            : state;
+        });
+
+        renderComponent(mapFunc);
+
+        defer(() => {
+          provider.store.dispatch({
+            type: 'query change',
+            query: 'blah blah'
+          });
+
+          defer(() => { // TODO
+            expect(window.fetch.calls.count()).toEqual(2);
+            done();
+          });
         });
       });
 
       describe('when the url is the same but headers are different', () => {
-        it('makes all requests to server', () => {
+        it('makes all requests to server', (done) => {
           [
             { 'X-Secret': 'Shhh' },
             { 'X-Secret': 'blah' },
             { 'X-Secret': 'blah' },
             { 'X-Secre': 'tblah' }
           ].forEach((headers) => {
-            renderComponent(() => ({ users: { headers, url: 'http://url.com', ttl: MINUTE } }));
+            renderComponent(() => ({
+              resources: {
+                users: {
+                  headers,
+                  url: 'http://url.com',
+                  schema: arrayOf(userSchema)
+                }
+              }
+            }));
           });
-          expect(window.fetch.calls.count()).toEqual(3);
+          defer(() => {
+            expect(window.fetch.calls.count()).toEqual(3);
+            done();
+          });
         });
-      });
-    });
-
-    describe('when default value is given', () => {
-      it('provides default value until request finished', () => {
-        const defaultValue = { default: 'value' };
-        const { domElement } = renderComponent(() => ({
-          users: {
-            url: 'http://url.com',
-            default: defaultValue
-          }
-        }));
-        expect(domElement._props.users.value).toEqual(defaultValue);
-      });
-    });
-
-    describe('when type is given', () => {
-      it('validates the response is of type', (done) => {
-        spyOn(console, 'error');
-        renderComponent(() => ({
-          users: {
-            url: 'http://url.com',
-            type: String
-          }
-        }));
-        defer(() => {
-          expect(console.error).toHaveBeenCalled();
-          done();
-        });
-      });
-
-      it('sets the default value to empty of `type` if default value isnt provided', () => {
-        const { domElement } = renderComponent(() => ({
-          users: {
-            url: 'http://url.com',
-            type: Object
-          }
-        }));
-        expect(domElement._props.users.value).toEqual({});
       });
     });
   });
 
-  describe('POST request', () => {
-    it('retrieves data', () => {
-      renderComponent(() => ({
-        users: {
-          url: 'http://url.com',
-          method: 'POST'
-        }
-      }));
-      expect(window.fetch.calls.count()).toEqual(1);
-    });
+  describe('POST requests', () => {
+    const usersDefinition = {
+      schema: userSchema,
+      url: 'http://tpt.com/users',
+      method: 'POST',
+      payload: JSON.stringify({ user: { name: 'foo' } })
+    };
 
-    describe('when TTL is given', () => {
-      it('still does NOT store the promise', () => {
-        const { provider: { store } } = renderComponent(() => ({
-          users: {
-            url: 'http://url.com',
-            method: 'POST',
-            ttl: MINUTE
+    describe('when data is NOT in state', () => {
+      it('does not fire automatically', (done) => {
+        renderComponent(() => ({
+          resources: {
+            users: usersDefinition
           }
         }));
-        expect(store.length).toEqual(0);
+        defer(() => {
+          expect(window.fetch.calls.count()).toEqual(0);
+          done();
+        });
+      });
+
+      it('stores returned resource', (done) => {
+        renderComponent(() => ({
+          resources: {
+            users: usersDefinition
+          }
+        }));
+        domElement._props.fetchResource(usersDefinition);
+        defer(() => {
+          expect(window.fetch.calls.count()).toEqual(1);
+          const state = provider.props.store.getState().connect;
+          expect(Object.keys(state.resources.user).length).toEqual(1);
+          expect(Object.keys(state.paramsToResources).length).toEqual(1);
+          done();
+        });
+      });
+    });
+
+    describe('when data is in state', () => {
+      it('still fires a new request', () => {
       });
     });
   });

@@ -1,6 +1,6 @@
 import { merge, isEqual } from 'lodash';
 import { connect as reduxConnect } from 'react-redux';
-import request from '../actions';
+import { invalidateResource, prepopulateResource, fetchResource } from '../actions';
 import { findInState, fullUrl } from '../helpers';
 import { normalize } from 'normalizr';
 
@@ -17,7 +17,7 @@ function normalizeMap(originalMap, state) {
 
   return Object.keys(originalMap.resources).reduce((newMap, key) => {
     const resource =
-      merge({}, resourceDefaults, originalMap.resources[key].resource, originalMap.resources[key]);
+      merge({}, resourceDefaults, originalMap.resources[key].extends, originalMap.resources[key]);
 
     resource.url = fullUrl(resource.url, resource.params);
     resource.isArray = !resource.schema.getKey;
@@ -42,24 +42,25 @@ export default function connect(mapStateToProps, mapDispatchToProps = {}, mergeP
     return normalizeMap(originalMap, state);
   };
 
-  // expose our 'request' dispatch func so can be called by client manually
-  const _mapDispatchToProps = merge({}, mapDispatchToProps, { request });
+  // expose our 'fetchResource' dispatch func so can be called by client manually
+  const _mapDispatchToProps = merge({}, mapDispatchToProps, {
+    fetchResource,
+    prepopulateResource,
+    invalidateResource
+  });
 
   return (WrappedComponent) => {
     const ReduxConnect =
       reduxConnect(_mapStateToProps, _mapDispatchToProps, mergeProps)(WrappedComponent);
 
     return class TptConnect extends ReduxConnect {
-
-      /**
-       * Dispatches a CONNECT_REQUEST action for all the resources provided
-       */
       loadResources(resources = {}) {
         const { props } = this.renderedElement;
         Object.keys(resources).forEach((key) => {
           const resource = resources[key];
           if (resource.auto && !findInState(this.state.storeState, resource)) {
-            props.request(resource);
+            props.prepopulateResource(resource);
+            props.fetchResource(resource);
           }
         });
       }

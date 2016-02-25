@@ -6,6 +6,7 @@ import { apiMiddleware } from 'redux-api-middleware';
 import crypto from 'crypto';
 import connectReducer from '../reducers';
 
+
 /**
  * Sorts object alphabetically
  */
@@ -64,7 +65,7 @@ export function findInState(state, resourceDefinition) {
   } else {
     mappedResources = defaultValue;
   }
-  return merge(defaultValue, mappedResources, { _meta: resourceMap.meta });
+  return merge(isArray ? [] : {}, mappedResources, { _meta: resourceMap.meta });
 }
 
 export function fullUrl(url, params) {
