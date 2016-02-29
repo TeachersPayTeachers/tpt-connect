@@ -1,9 +1,9 @@
 const path = require('path');
 
 module.exports = {
-  entry: [path.join(__dirname, 'src', 'tpt-connect')],
+  entry: [path.join(__dirname, 'src', 'index')],
   output: {
-    path: path.join(__dirname, 'lib'),
+    path: path.join(__dirname, 'dist'),
     filename: 'tpt-connect.js',
     library: 'tpt-connect',
     libraryTarget: 'commonjs2'
