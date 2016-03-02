@@ -22118,7 +22118,6 @@ module.exports =
 	            next(context$3$0.t6);
 	            context$3$0.prev = 56;
 	            context$3$0.next = 59;
-	            _isomorphicFetch2['default'] = window.fetch;
 	            return _regeneratorRuntime.awrap(_isomorphicFetch2['default'](endpoint, { method: method, body: body, credentials: credentials, headers: headers }));
 	
 	          case 59:
@@ -26519,14 +26518,12 @@ module.exports =
 	    body: body || undefined,
 	    types: [{
 	      type: CONNECT_REQUEST,
-	      payload: function payload() {
-	        return computePayload(resourceDefinition, {
-	          isFetching: true,
-	          isError: false,
-	          isSuccess: false,
-	          lastUpdated: null
-	        });
-	      }
+	      payload: computePayload(resourceDefinition, {
+	        isFetching: true,
+	        isError: false,
+	        isSuccess: false,
+	        lastUpdated: null
+	      })
 	    }, {
 	      type: CONNECT_SUCCESS,
 	      payload: onResponse(resourceDefinition, {
