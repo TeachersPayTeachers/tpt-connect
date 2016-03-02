@@ -1,8 +1,7 @@
 {
-  "name": "tpt-connect",
+  "name": "@teachers/tpt-connect",
   "version": "0.0.1",
-  "description": "",
-  "private": true,
+  "description": "TpT-Connect is an extension to [Redux](https://github.com/reactjs/redux) which creates a simple interface for components' data fetching.",
   "main": "dist/tpt-connect.js",
   "engines": {
     "node": ">=4.x.x",
@@ -65,5 +64,15 @@
     "react-router-redux": "^3.0.0",
     "redux": "^3.3.1",
     "redux-api-middleware": "^1.0.0-beta3"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/teacherspayteachers/tpt-connect.git"
+  },
+  "author": "Peleg Rosenthal <peleg@teacherspayteachers.com> (http://peleg.co)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/teacherspayteachers/tpt-connect/issues"
+  },
+  "homepage": "https://github.com/teacherspayteachers/tpt-connect#readme"
 }
