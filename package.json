@@ -13,7 +13,8 @@
     "test-jenkins": "mkdir logs; karma start --single-run=true",
     "lint": "eslint src",
     "build": "webpack",
-    "coverage-report": "open `pwd`/coverage/lcov-report/index.html"
+    "coverage-report": "open `pwd`/coverage/lcov-report/index.html",
+    "prepublish": "npm run build"
   },
   "devDependencies": {
     "babel-core": "^6.4.5",
