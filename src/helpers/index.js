@@ -57,14 +57,16 @@ export function findInState(state, resourceDefinition) {
     return false;
   }
 
-  let mappedResources;
+  let mappedResources = resources[key]
+    ? resourceKeys.map((id) => resources[key][id])
+    : resourceMap.data[key];
 
-  if (resources[key]) {
-    mappedResources = resourceKeys.map((id) => resources[key][id]);
-    !isArray && (mappedResources = mappedResources.pop());
-  } else {
+  if (!mappedResources) {
     mappedResources = defaultValue;
+  } else if (!isArray) {
+    mappedResources = mappedResources.pop();
   }
+
   return merge(isArray ? [] : {}, mappedResources, { _meta: resourceMap.meta });
 }
 
@@ -77,7 +79,7 @@ export function fullUrl(url, params) {
 /**
  * Adds tpt-connect middleware and reducer
  */
-export function createStore(reducer, initialState, enhancer) {
+export function createStore({ reducer = (_ = {}) => _, initialState, enhancer }) {
   return applyMiddleware(apiMiddleware)(reduxCreateStore)(
     combineReducers({ connect: connectReducer, routing: reducer }),
     initialState,
