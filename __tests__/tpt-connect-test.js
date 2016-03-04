@@ -54,6 +54,7 @@ function renderComponent(mappingFunc) {
 describe('tpt-connect', () => {
   beforeEach(() => {
     store = createStore({});
+    spyOn(console, 'warn');
     window.fetch.calls.reset();
     window.fetch.and.callFake(() => {
       return Promise.resolve(new Response(JSON.stringify({
