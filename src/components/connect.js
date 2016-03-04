@@ -19,6 +19,10 @@ function normalizeMap(originalMap, state) {
     const resource =
       merge({}, resourceDefaults, originalMap.resources[key].extends, originalMap.resources[key]);
 
+    if (/\?[^#]/.test(resource.url)) {
+      console.warn('Include query parameters under `params` in your resource definition instead of directly in the URL.');
+    }
+
     resource.url = fullUrl(resource.url, resource.params);
     resource.isArray = !resource.schema.getKey;
     resource.method = resource.method.toUpperCase();

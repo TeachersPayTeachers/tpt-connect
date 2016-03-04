@@ -53,7 +53,7 @@ function renderComponent(mappingFunc) {
 
 describe('tpt-connect', () => {
   beforeEach(() => {
-    store = createStore((state = {}) => (state));
+    store = createStore({});
     window.fetch.calls.reset();
     window.fetch.and.callFake(() => {
       return Promise.resolve(new Response(JSON.stringify({
@@ -80,7 +80,7 @@ describe('tpt-connect', () => {
 
   it('does not intervene with normal Redux functionality', (done) => {
     const spyReducer = jasmine.createSpy().and.callFake((state = {}) => (state));
-    store = createStore(spyReducer);
+    store = createStore({ reducer: spyReducer });
     renderComponent();
     defer(() => {
       expect(spyReducer).toHaveBeenCalled();
@@ -230,11 +230,11 @@ describe('tpt-connect', () => {
           };
         };
 
-        store = createStore((state = {}, action) => {
+        store = createStore({ reducer: (state = {}, action) => {
           return action.type === 'query change'
             ? { ...action, ...state }
             : state;
-        });
+        } });
 
         renderComponent(mapFunc);
 
