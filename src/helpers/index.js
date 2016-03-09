@@ -64,7 +64,7 @@ export function findInState(state, resourceDefinition) {
   if (!mappedResources) {
     mappedResources = defaultValue;
   } else if (!isArray) {
-    mappedResources = mappedResources.pop();
+    mappedResources = mappedResources[0];
   }
 
   return merge(isArray ? [] : {}, mappedResources, { _meta: resourceMap.meta });
