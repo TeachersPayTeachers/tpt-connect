@@ -79,9 +79,9 @@ export function fullUrl(url, params) {
 /**
  * Adds tpt-connect middleware and reducer
  */
-export function createStore({ reducer = (_ = {}) => _, initialState, enhancer }) {
+export function createStore({ reducers = { routing: (_ = {}) => _ }, initialState, enhancer }) {
   return applyMiddleware(apiMiddleware)(reduxCreateStore)(
-    combineReducers({ connect: connectReducer, routing: reducer }),
+    combineReducers({ ...reducers, connect: connectReducer }),
     initialState,
     enhancer
   );
