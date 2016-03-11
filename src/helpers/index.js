@@ -1,10 +1,7 @@
 import querystring from 'querystring';
 import normalizeUrl from 'normalize-url';
 import { merge } from 'lodash';
-import { createStore as reduxCreateStore, combineReducers, applyMiddleware } from 'redux';
-import { apiMiddleware } from 'redux-api-middleware';
 import crypto from 'crypto';
-import connectReducer from '../reducers';
 
 
 /**
@@ -74,15 +71,4 @@ export function fullUrl(url, params) {
   url = url.replace(/\/+$/, '');
   params && (url = `${url}/?${normalizeParams(params)}`);
   return normalizeUrl(url);
-}
-
-/**
- * Adds tpt-connect middleware and reducer
- */
-export function createStore({ reducers = { routing: (_ = {}) => _ }, initialState, enhancer }) {
-  return applyMiddleware(apiMiddleware)(reduxCreateStore)(
-    combineReducers({ ...reducers, connect: connectReducer }),
-    initialState,
-    enhancer
-  );
 }
