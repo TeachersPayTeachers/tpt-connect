@@ -4,7 +4,8 @@ import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import TestUtils from 'react/lib/ReactTestUtils';
 import { Provider } from 'react-redux';
-import { connect, createStore, Schema, arrayOf } from '../src';
+import { createStore, combineReducers, applyMiddleware } from 'redux';
+import { connect, Schema, arrayOf, connectReducer, connectMiddleware } from '../src';
 
 class _Component extends Component {
   componentDidMount() {
@@ -53,7 +54,10 @@ function renderComponent(mappingFunc) {
 
 describe('tpt-connect', () => {
   beforeEach(() => {
-    store = createStore({});
+    store = createStore(
+      combineReducers({ connect: connectReducer }),
+      applyMiddleware(connectMiddleware)
+    );
     spyOn(console, 'warn');
     window.fetch.calls.reset();
     window.fetch.and.callFake(() => {
@@ -81,7 +85,10 @@ describe('tpt-connect', () => {
 
   it('does not intervene with normal Redux functionality', (done) => {
     const spyReducer = jasmine.createSpy().and.callFake((state = {}) => (state));
-    store = createStore({ reducer: spyReducer });
+    store = createStore(
+      combineReducers({ reducer: spyReducer, connect: connectReducer }),
+      applyMiddleware(connectMiddleware)
+    );
     renderComponent();
     defer(() => {
       expect(spyReducer).toHaveBeenCalled();
@@ -231,11 +238,14 @@ describe('tpt-connect', () => {
           };
         };
 
-        store = createStore({ reducer: (state = {}, action) => {
-          return action.type === 'query change'
-            ? { ...action, ...state }
-            : state;
-        } });
+        store = createStore(
+          combineReducers({ connect: connectReducer, routing: (state = {}, action) => {
+            return action.type === 'query change'
+              ? { ...action, ...state }
+              : state;
+          } }),
+          applyMiddleware(connectMiddleware)
+        );
 
         renderComponent(mapFunc);
 

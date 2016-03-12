@@ -27,7 +27,14 @@ export function schemaKey({ schema }) {
     : schema.getItemSchema().getKey();
 }
 
-export function normalizeParams(params) {
+export function normalizeParams(params = {}) {
+  // querystring has a weird way of dealing w/ object and arrays, so we just
+  // stringify here instead of letting it f it up.
+  Object.keys(params).forEach((key) => {
+    if (typeof params[key] === 'object') {
+      params[key] = JSON.stringify(params[key]);
+    }
+  });
   return querystring.stringify(_sortObject(params));
 }
 
