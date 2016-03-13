@@ -3,7 +3,6 @@ import normalizeUrl from 'normalize-url';
 import { merge } from 'lodash';
 import crypto from 'crypto';
 
-
 /**
  * Sorts object alphabetically
  */

@@ -5,7 +5,14 @@ import ReactDOM from 'react-dom';
 import TestUtils from 'react/lib/ReactTestUtils';
 import { Provider } from 'react-redux';
 import { createStore, combineReducers, applyMiddleware } from 'redux';
-import { connect, Schema, arrayOf, connectReducer, connectMiddleware } from '../src';
+import {
+  connect,
+  Schema,
+  arrayOf,
+  connectReducer,
+  connectMiddleware,
+  ConnectProvider
+} from '../src';
 
 class _Component extends Component {
   componentDidMount() {
@@ -72,6 +79,24 @@ describe('tpt-connect', () => {
   });
 
   // TODO: add test cases for when resource is not indexable (no key)
+
+  it('creates its own store when not provided one', () => {
+    provider = TestUtils.renderIntoDocument(
+      <ConnectProvider>
+        <_Component/>
+      </ConnectProvider>
+    );
+    expect(provider._reactInternalInstance._instance.state.store).toEqual(jasmine.any(Object));
+  });
+
+  it('reuses the store its provided with', () => {
+    provider = TestUtils.renderIntoDocument(
+      <ConnectProvider store={store}>
+        <_Component/>
+      </ConnectProvider>
+    );
+    expect(provider._reactInternalInstance._instance.state.store).toEqual(store);
+  });
 
   it('populates the prop with a default value', () => {
     renderComponent();

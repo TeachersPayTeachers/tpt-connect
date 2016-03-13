@@ -6,34 +6,54 @@ creates a simple interface for components' data fetching.
 ## Install
 
 ```Bash
-$ npm install --save teacherspayteachers/tpt-connect
+$ npm install --save @teachers/tpt-connect
 ```
 
 ## Usage
 
-Create your Redux store with the `createStore` method from `tpt-connect`:
+#### As a black box
 
 ```JavaScript
-import { createStore } from 'tpt-connect';
+import { ConnectProvider } from '@teachers/tpt-connect';
+
+render() {
+  <ConnectProvider>
+    <RootComponent />
+  </ConnectProvider>
+}
+```
+
+#### As a Redux plugin
+
+Create your Redux store with the `tpt-connect`'s reducer and middleware:
+
+```JavaScript
+import { createStore, combineReducers, applyMiddleware } from 'redux';
+import { connectReducer, connectMiddleware } from '@teachers/tpt-connect';
 
 const store =
-  createStore(rootReducer, optionalInitialState, optionalEnhancers);
+  createStore(combineReducers({
+    main: rootReducer,
+    connect: connectReducer
+  }), optionalInitialState, applyMiddleware(connectMiddleware));
 
+render() {
   <Provider store={store}>
     <RootComponent />
   </Provider>
+}
 ```
 
-And in your components throughout the app:
+#### And in your components throughout the app:
 
 ```JavaScript
-import { connect, Schema } from 'tpt-connect';
+import { connect, Schema } from '@teachers/tpt-connect';
 
 class User extends Component {
   static propTypes = {
     user: PropTypes.object,
     deleteUser: PropTypes.object,
-    request: PropTypes.func,
+    fetchResource: PropTypes.func,
     resources: PropTypes.object
   };
 
@@ -44,14 +64,14 @@ class User extends Component {
   }
 
   render() {
-    const { user, request, resources: { deleteUser } } = this.props;
+    const { user, fetchResource, resources: { deleteUser } } = this.props;
 
     return (
       <div>
         {deleteUser.meta.isSuccess && this.renderDeleteNotification()}
         <p>Name: {user.name}</p>
         <p>Deleted: {user.isDeleted}</p>
-        <button onClick={() => { request(deleteUser) }}>
+        <button onClick={() => { fetchResource(deleteUser) }}>
           DELETE USER
         </button>
       </div>
@@ -84,8 +104,8 @@ The aforementioned `connect` function is an extension to
 offers all of the functionality the Redux method does.
 
 The only additions are the `resources` object which lists definitions for the
-resources required for the component, and the `request` method which dispatches
-a request action.
+resources required for the component, and the `fetchResource` method which
+dispatches a request action.
 
 These are the options each resource definition takes:
 
