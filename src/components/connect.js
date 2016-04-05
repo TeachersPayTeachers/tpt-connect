@@ -73,6 +73,7 @@ export default function connect(mapStateToProps, mapDispatchToProps = {}, mergeP
       componentDidMount() {
         super.componentDidMount();
         this.loadResources(this.allResources);
+        this._oldResources = merge({}, this.allResources);
       }
 
       componentWillReceiveProps(...args) {
