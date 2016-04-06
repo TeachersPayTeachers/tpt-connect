@@ -68,6 +68,7 @@ export function fetchResource(resourceDefinition) {
   const { headers, method, url: endpoint, body } = resourceDefinition;
   return {
     [CALL_API]: {
+      credentials: 'include',
       headers,
       method,
       endpoint,
