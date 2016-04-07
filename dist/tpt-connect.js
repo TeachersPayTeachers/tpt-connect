@@ -61,21 +61,15 @@ module.exports =
 	
 	var _helpers = __webpack_require__(2);
 	
-	var _loop = function _loop(_key2) {
-	  if (_key2 === "default") return 'continue';
-	  Object.defineProperty(exports, _key2, {
+	Object.keys(_helpers).forEach(function (key) {
+	  if (key === "default") return;
+	  Object.defineProperty(exports, key, {
 	    enumerable: true,
 	    get: function get() {
-	      return _helpers[_key2];
+	      return _helpers[key];
 	    }
 	  });
-	};
-	
-	for (var _key2 in _helpers) {
-	  var _ret = _loop(_key2);
-	
-	  if (_ret === 'continue') continue;
-	}
+	});
 	
 	var _normalizr = __webpack_require__(41);
 	
@@ -1789,7 +1783,7 @@ module.exports =
 /* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {/*! https://mths.be/punycode v1.4.0 by @mathias */
+	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {/*! https://mths.be/punycode v1.4.1 by @mathias */
 	;(function(root) {
 	
 		/** Detect free variables */
@@ -2277,7 +2271,7 @@ module.exports =
 			 * @memberOf punycode
 			 * @type String
 			 */
-			'version': '1.3.2',
+			'version': '1.4.1',
 			/**
 			 * An object of methods to convert from JavaScript's internal character
 			 * representation (UCS-2) to Unicode code points, and back.
@@ -28614,7 +28608,6 @@ module.exports =
 	            next(context$3$0.t6);
 	            context$3$0.prev = 56;
 	            context$3$0.next = 59;
-	            console.log('fetch', endpoint, { method: method, body: body, credentials: credentials, headers: headers });
 	            return _regeneratorRuntime.awrap(_isomorphicFetch2['default'](endpoint, { method: method, body: body, credentials: credentials, headers: headers }));
 	
 	          case 59:
@@ -28688,7 +28681,6 @@ module.exports =
 	// The request was malformed, or there was a network error
 	
 	// Process the server response
-
 
 /***/ },
 /* 227 */
@@ -30566,11 +30558,13 @@ module.exports =
 	  var result = _ref$result === undefined ? [] : _ref$result;
 	
 	
+	  var data = result.length === 0 && json ? [json] : [].concat(result);
+	
 	  return {
-	    resources: entities,
+	    resources: result.length !== 0 ? entities : {},
 	    paramsToResources: _defineProperty({}, (0, _helpers.requestKey)(resourceDefinition), {
 	      meta: meta,
-	      data: _defineProperty({}, (0, _helpers.schemaKey)(resourceDefinition), [].concat(result))
+	      data: _defineProperty({}, (0, _helpers.schemaKey)(resourceDefinition), data)
 	    })
 	  };
 	}

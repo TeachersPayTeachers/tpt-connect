@@ -15,12 +15,14 @@ function computePayload(resourceDefinition, meta, json) {
     ? normalize(json, schema)
     : {};
 
+  const data = result.length === 0 && json ? [json] : [].concat(result);
+
   return {
-    resources: entities,
+    resources: result.length !== 0 ? entities : {},
     paramsToResources: {
       [requestKey(resourceDefinition)]: {
         meta,
-        data: { [schemaKey(resourceDefinition)]: [].concat(result) }
+        data: { [schemaKey(resourceDefinition)]: data }
       }
     }
   };
