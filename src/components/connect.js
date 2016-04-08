@@ -6,9 +6,9 @@ import { normalize } from 'normalizr';
 
 const resourceDefaults = {
   method: 'GET',
-  headers: {
-    'Content-Type': 'application/json'
-  },
+  // headers: {
+  //   'Content-Type': 'application/json'
+  // },
   normalize
 };
 
