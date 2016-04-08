@@ -76,5 +76,5 @@ export function findInState(state, resourceDefinition) {
 export function fullUrl(url, params) {
   url = url.replace(/\/+$/, '');
   params && (url = `${url}/?${normalizeParams(params)}`);
-  return normalizeUrl(url);
+  return normalizeUrl(url, { stripWWW: false });
 }
