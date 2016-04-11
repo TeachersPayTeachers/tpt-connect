@@ -2,6 +2,7 @@ import querystring from 'querystring';
 import normalizeUrl from 'normalize-url';
 import { merge } from 'lodash';
 import crypto from 'crypto';
+import debug from 'debug';
 
 /**
  * Sorts object alphabetically
@@ -78,12 +79,10 @@ export function fullUrl(url, params) {
 }
 
 export const logger = (function () {
-  const isVerbose = process.env.NODE_ENV !== 'production';
-  const infoFunc = (console.info || console.log).bind(console);
-  const errorFunc = (console.error || console.log).bind(console);
-  const logPrefix = '[TPT CONNECT]';
-  return {
-    info: (...args) => (isVerbose && infoFunc(logPrefix, ...args)),
-    error: (...args) => (errorFunc(logPrefix, ...args))
-  };
+  const namespace = 'tptconnect';
+  const error = debug(`${namespace}:error`);
+  const info = debug(`${namespace}:info`);
+  error.log = (console.error || console.log).bind(console);
+  info.log = (console.info || console.log).bind(console);
+  return { error, info };
 }());
