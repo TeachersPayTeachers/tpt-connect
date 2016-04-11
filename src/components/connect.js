@@ -25,6 +25,7 @@ function normalizeMap(originalMap, state) {
     resource.isArray = !resource.schema.getKey;
     resource.method = resource.method.toUpperCase();
     resource.defaultValue = resource.isArray ? [] : {};
+    resource.defaultValue._meta = {};
 
     if (resource.auto === undefined && resource.method === 'GET') {
       resource.auto = true;
