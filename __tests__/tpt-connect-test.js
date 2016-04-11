@@ -171,6 +171,8 @@ describe('tpt-connect', () => {
             done();
           });
         });
+
+        // TODO: this fails because we're not stripping WWW anymore (see helpers.fullUrl)
         describe('when the url is not normalized', () => {
           it('still returns the stored data', (done) => {
             [

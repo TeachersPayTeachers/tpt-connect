@@ -2,6 +2,7 @@ import querystring from 'querystring';
 import normalizeUrl from 'normalize-url';
 import { merge } from 'lodash';
 import crypto from 'crypto';
+import debug from 'debug';
 
 /**
  * Sorts object alphabetically
@@ -49,12 +50,10 @@ export function requestKey({ url, headers, method, body }) {
 export function findInState(state, resourceDefinition) {
   const { paramsToResources = {}, resources = {} } = state.connect;
   const { isArray, defaultValue } = resourceDefinition;
-
-  const _requestKey = requestKey(resourceDefinition);
   const key = schemaKey(resourceDefinition);
-
-  const resourceMap = paramsToResources[_requestKey];
-  const resourceKeys = resourceMap && paramsToResources[_requestKey].data[key];
+  const resourceMap = paramsToResources[resourceDefinition.requestKey];
+  const resourceKeys = resourceMap &&
+    paramsToResources[resourceDefinition.requestKey].data[key];
 
   if (!resourceKeys || resourceMap.meta.didInvalidate) {
     return false;
@@ -78,3 +77,12 @@ export function fullUrl(url, params) {
   params && (url = `${url}/?${normalizeParams(params)}`);
   return normalizeUrl(url, { stripWWW: false });
 }
+
+export const logger = (function () {
+  const namespace = 'tptconnect';
+  const error = debug(`${namespace}:error`);
+  const info = debug(`${namespace}:info`);
+  error.log = (console.error || console.log).bind(console);
+  info.log = (console.info || console.log).bind(console);
+  return { error, info };
+}());

@@ -1,6 +1,6 @@
 {
   "name": "@teachers/tpt-connect",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "TpT-Connect is an extension to [Redux](https://github.com/reactjs/redux) which creates a simple interface for components' data fetching.",
   "main": "src",
   "engines": {
@@ -29,6 +29,7 @@
     "codeclimate-test-reporter": "0.3.0",
     "component-resolver-webpack": "0.4.0",
     "css-loader": "0.23.1",
+    "debug": "2.2.0",
     "eslint": "1.10.3",
     "eslint-config-airbnb": "4.0.0",
     "eslint-loader": "1.2.1",

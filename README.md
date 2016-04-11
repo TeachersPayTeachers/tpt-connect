@@ -148,3 +148,14 @@ These are the options each resource definition takes:
   ```
   normalize(Object json, Schema schema, [Object options]) : Object normalizedJson
   ```
+
+### Debugging
+
+TpT-Connect uses [debug](https://github.com/visionmedia/debug). In order to
+turn on more verbose logging, set the `tptconnect` namespace in localStorage to
+allow `info`, `error`, or all via `*`. For example, to enable all levels of
+logging for TpT-Connect, set:
+
+```JavaScript
+localStorage.debug = 'tptconnect:*';
+```

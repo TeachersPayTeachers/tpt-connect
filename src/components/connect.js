@@ -1,14 +1,11 @@
 import { merge, isEqual } from 'lodash';
 import { connect as reduxConnect } from 'react-redux';
 import { invalidateResource, prepopulateResource, fetchResource } from '../actions';
-import { findInState, fullUrl } from '../helpers';
+import { findInState, fullUrl, requestKey } from '../helpers';
 import { normalize } from 'normalizr';
 
 const resourceDefaults = {
   method: 'GET',
-  // headers: {
-  //   'Content-Type': 'application/json'
-  // },
   normalize
 };
 
@@ -28,12 +25,14 @@ function normalizeMap(originalMap, state) {
     resource.isArray = !resource.schema.getKey;
     resource.method = resource.method.toUpperCase();
     resource.defaultValue = resource.isArray ? [] : {};
+    resource.defaultValue._meta = {};
 
     if (resource.auto === undefined && resource.method === 'GET') {
       resource.auto = true;
     }
 
     originalMap.resources[key] = resource;
+    resource.requestKey = requestKey(resource);
 
     return merge(newMap, {
       [key]: findInState(state, resource) || resource.defaultValue
