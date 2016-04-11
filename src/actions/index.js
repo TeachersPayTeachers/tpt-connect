@@ -1,5 +1,5 @@
 import { CALL_API } from 'redux-api-middleware';
-import { schemaKey, requestKey } from '../helpers';
+import { schemaKey, logger } from '../helpers';
 import { merge } from 'lodash';
 import { normalize as _normalize } from 'normalizr';
 
@@ -20,7 +20,7 @@ function computePayload(resourceDefinition, meta, json) {
   return {
     resources: result.length !== 0 ? entities : {},
     paramsToResources: {
-      [requestKey(resourceDefinition)]: {
+      [resourceDefinition]: {
         meta,
         data: { [schemaKey(resourceDefinition)]: data }
       }
@@ -37,8 +37,10 @@ function onResponse(resourceDefinition, meta) {
     }, meta);
 
     return response.json().then((json) => {
+      logger.info(`Fetched resource successfully: ${resourceDefinition}`);
       return computePayload(resourceDefinition, { ...meta, response }, json);
     }, () => {
+      logger.info(`Failed to fetch resource: ${resourceDefinition}`);
       meta = merge({}, meta, { isSuccess: false, isError: true });
       return computePayload(resourceDefinition, { ...meta, response });
     });
@@ -46,6 +48,7 @@ function onResponse(resourceDefinition, meta) {
 }
 
 export function invalidateResource(resourceDefinition) {
+  logger.info(`Invalidating resource: ${resourceDefinition}`);
   return {
     type: CONNECT_INVALIDATE,
     payload: computePayload(resourceDefinition, {
@@ -68,6 +71,7 @@ export function prepopulateResource(resourceDefinition) {
 
 export function fetchResource(resourceDefinition) {
   const { headers, method, url: endpoint, body } = resourceDefinition;
+  logger.info(`Fetching resource: ${resourceDefinition}`);
   return {
     [CALL_API]: {
       credentials: 'include',
