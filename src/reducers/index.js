@@ -1,4 +1,5 @@
 import { merge } from 'lodash';
+import { logger } from '../helpers';
 import {
   CONNECT_INVALIDATE,
   CONNECT_PREPOPULATE,
@@ -18,8 +19,7 @@ export default function connectReducer(state = {}, action) {
     CONNECT_FAILURE
   ].indexOf(type)) {
     if (props.error && type !== CONNECT_FAILURE) { // internal error
-      console.error(props.payload);
-      throw new Error(props.payload.message);
+      logger.error(props.payload);
     }
     return merge({}, state, props.payload);
   }
