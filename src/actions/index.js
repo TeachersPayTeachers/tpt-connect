@@ -20,7 +20,7 @@ function computePayload(resourceDefinition, meta, json) {
   return {
     resources: result.length !== 0 ? entities : {},
     paramsToResources: {
-      [resourceDefinition]: {
+      [resourceDefinition.requestKey]: {
         meta,
         data: { [schemaKey(resourceDefinition)]: data }
       }
@@ -37,10 +37,10 @@ function onResponse(resourceDefinition, meta) {
     }, meta);
 
     return response.json().then((json) => {
-      logger.info(`Fetched resource successfully: ${resourceDefinition}`);
+      logger.info('Fetched resource successfully:', resourceDefinition);
       return computePayload(resourceDefinition, { ...meta, response }, json);
     }, () => {
-      logger.info(`Failed to fetch resource: ${resourceDefinition}`);
+      logger.info('Failed to fetch resource:', resourceDefinition);
       meta = merge({}, meta, { isSuccess: false, isError: true });
       return computePayload(resourceDefinition, { ...meta, response });
     });
@@ -48,7 +48,7 @@ function onResponse(resourceDefinition, meta) {
 }
 
 export function invalidateResource(resourceDefinition) {
-  logger.info(`Invalidating resource: ${resourceDefinition}`);
+  logger.info('Invalidating resource:', resourceDefinition);
   return {
     type: CONNECT_INVALIDATE,
     payload: computePayload(resourceDefinition, {
@@ -71,7 +71,7 @@ export function prepopulateResource(resourceDefinition) {
 
 export function fetchResource(resourceDefinition) {
   const { headers, method, url: endpoint, body } = resourceDefinition;
-  logger.info(`Fetching resource: ${resourceDefinition}`);
+  logger.info('Fetching resource:', resourceDefinition);
   return {
     [CALL_API]: {
       credentials: 'include',

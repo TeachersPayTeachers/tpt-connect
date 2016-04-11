@@ -81,9 +81,9 @@ export const logger = (function () {
   const isVerbose = process.env.NODE_ENV !== 'production';
   const infoFunc = (console.info || console.log).bind(console);
   const errorFunc = (console.error || console.log).bind(console);
-  const logPrefix = 'TpT Connect:';
+  const logPrefix = '[TPT CONNECT]';
   return {
-    info: (msg) => (isVerbose && infoFunc(`${logPrefix} ${msg}`)),
-    error: (msg) => (errorFunc(`${logPrefix} ${msg}`))
+    info: (...args) => (isVerbose && infoFunc(logPrefix, ...args)),
+    error: (...args) => (errorFunc(logPrefix, ...args))
   };
 }());
