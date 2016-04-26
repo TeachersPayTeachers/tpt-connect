@@ -65,7 +65,6 @@ describe('tpt-connect', () => {
       combineReducers({ connect: connectReducer }),
       applyMiddleware(connectMiddleware)
     );
-    spyOn(console, 'warn');
     window.fetch.calls.reset();
     window.fetch.and.callFake(() => {
       return Promise.resolve(new Response(JSON.stringify({
@@ -259,7 +258,8 @@ describe('tpt-connect', () => {
             resources: {
               users: {
                 schema: arrayOf(userSchema),
-                url: `http://tpt.com/users/?query=${state.routing.query}`
+                url: 'http://tpt.com/users',
+                params: { query: state.routing.query }
               }
             }
           };

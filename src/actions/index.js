@@ -9,7 +9,7 @@ export const CONNECT_FAILURE = 'CONNECT_FAILURE';
 export const CONNECT_PREPOPULATE = 'CONNECT_PREPOPULATE';
 export const CONNECT_INVALIDATE = 'CONNECT_INVALIDATE';
 
-function computePayload(resourceDefinition, meta, json) {
+export function computePayload(resourceDefinition, meta, json) {
   const { schema, normalize = _normalize } = resourceDefinition;
   const { entities = {}, result = [] } = json
     ? normalize(json, schema)

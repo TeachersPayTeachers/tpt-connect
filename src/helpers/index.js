@@ -3,6 +3,9 @@ import normalizeUrl from 'normalize-url';
 import { merge } from 'lodash';
 import crypto from 'crypto';
 import debug from 'debug';
+import { normalize } from 'normalizr';
+import { computePayload } from '../actions';
+import invariant from 'invariant';
 
 /**
  * Sorts object alphabetically
@@ -86,3 +89,40 @@ export const logger = (function () {
   info.log = (console.info || console.log).bind(console);
   return { error, info };
 }());
+
+const resourceDefaults = {
+  method: 'GET',
+  normalize
+};
+
+export function normalizeResourceDefinition(resource) {
+  resource = merge({}, resourceDefaults, resource.extends || {}, resource);
+
+  invariant(resource.schema !== undefined, 'Resource definition must have a schema.');
+  invariant(
+    !/\?[^#]/.test(resource.url),
+    'Include query parameters under `params` in your resource definition ' +
+    'instead of directly in the URL.'
+  );
+
+  resource.url = fullUrl(resource.url, resource.params);
+  resource.method = resource.method.toUpperCase();
+  resource.isArray = !resource.schema.getKey;
+  resource.defaultValue = resource.isArray ? [] : {};
+  resource.defaultValue._meta = {};
+  resource.requestKey = requestKey(resource);
+
+  if (resource.auto === undefined && resource.method === 'GET') {
+    resource.auto = true;
+  }
+
+  return resource;
+}
+
+export function computeExternalPayload(resourceDefinition, json) {
+  return computePayload(
+    normalizeResourceDefinition(resourceDefinition),
+    { isError: false, isSuccess: true },
+    json
+  );
+}

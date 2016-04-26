@@ -1,39 +1,14 @@
 import { merge, isEqual } from 'lodash';
 import { connect as reduxConnect } from 'react-redux';
 import { invalidateResource, prepopulateResource, fetchResource } from '../actions';
-import { findInState, fullUrl, requestKey } from '../helpers';
-import { normalize } from 'normalizr';
-
-const resourceDefaults = {
-  method: 'GET',
-  normalize
-};
+import { findInState, normalizeResourceDefinition } from '../helpers';
 
 function normalizeMap(originalMap, state) {
   if (!originalMap.resources) return originalMap;
 
   return Object.keys(originalMap.resources).reduce((newMap, key) => {
-    const resource =
-      merge({}, resourceDefaults, originalMap.resources[key].extends, originalMap.resources[key]);
-
-    if (/\?[^#]/.test(resource.url)) {
-      console.warn('Include query parameters under `params` in your resource ' +
-        'definition instead of directly in the URL.');
-    }
-
-    resource.url = fullUrl(resource.url, resource.params);
-    resource.isArray = !resource.schema.getKey;
-    resource.method = resource.method.toUpperCase();
-    resource.defaultValue = resource.isArray ? [] : {};
-    resource.defaultValue._meta = {};
-
-    if (resource.auto === undefined && resource.method === 'GET') {
-      resource.auto = true;
-    }
-
+    const resource = normalizeResourceDefinition(originalMap.resources[key]);
     originalMap.resources[key] = resource;
-    resource.requestKey = requestKey(resource);
-
     return merge(newMap, {
       [key]: findInState(state, resource) || resource.defaultValue
     });
