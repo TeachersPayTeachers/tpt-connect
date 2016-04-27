@@ -1,4 +1,4 @@
-import { merge, isEqual } from 'lodash';
+import { isEqual } from 'lodash';
 import { connect as reduxConnect } from 'react-redux';
 import { invalidateResource, prepopulateResource, fetchResource } from '../actions';
 import { findInState, normalizeResourceDefinition } from '../helpers';
@@ -9,9 +9,8 @@ function normalizeMap(originalMap, state) {
   return Object.keys(originalMap.resources).reduce((newMap, key) => {
     const resource = normalizeResourceDefinition(originalMap.resources[key]);
     originalMap.resources[key] = resource;
-    return merge(newMap, {
-      [key]: findInState(state, resource) || resource.defaultValue
-    });
+    newMap[key] = findInState(state, resource) || resource.defaultValue;
+    return newMap;
   }, originalMap);
 }
 
@@ -22,7 +21,7 @@ export default function connect(mapStateToProps, mapDispatchToProps = {}, mergeP
   };
 
   // expose our 'fetchResource' dispatch func so can be called by client manually
-  const _mapDispatchToProps = merge({}, mapDispatchToProps, {
+  const _mapDispatchToProps = Object.assign({}, mapDispatchToProps, {
     fetchResource,
     prepopulateResource,
     invalidateResource
@@ -47,12 +46,12 @@ export default function connect(mapStateToProps, mapDispatchToProps = {}, mergeP
       componentDidMount() {
         super.componentDidMount();
         this.loadResources(this.allResources);
-        this._oldResources = merge({}, this.allResources);
+        this._oldResources = Object.assign({}, this.allResources);
       }
 
       componentWillReceiveProps(...args) {
         super.componentWillReceiveProps(...args);
-        this._oldResources = merge({}, this.allResources);
+        this._oldResources = Object.assign({}, this.allResources);
       }
 
       componentDidUpdate() {
@@ -61,7 +60,7 @@ export default function connect(mapStateToProps, mapDispatchToProps = {}, mergeP
           Object.keys(this.allResources).reduce((changedResources, key) => {
             return isEqual(this._oldResources[key], this.allResources[key])
               ? changedResources
-              : merge({}, changedResources, { [key]: this.allResources[key] });
+              : Object.assign({}, changedResources, { [key]: this.allResources[key] });
           }, {})
         );
       }
