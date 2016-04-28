@@ -15,7 +15,10 @@ export function computePayload(resourceDefinition, meta, json) {
     ? normalize(json, schema)
     : {};
 
-  const data = result.length === 0 && json ? [json] : [].concat(result);
+  // if data is not indexable just wrap it in array and store directly under paramsToResources
+  const data = result.length === 0 && Object.keys(entities).length !== 0 && json
+    ? [json]
+    : [].concat(result);
 
   return {
     resources: result.length !== 0 ? entities : {},
