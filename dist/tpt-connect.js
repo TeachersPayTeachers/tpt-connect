@@ -25405,8 +25405,9 @@ module.exports =
 	  var _ref$result = _ref.result;
 	  var result = _ref$result === undefined ? [] : _ref$result;
 	
+	  // if data is not indexable just wrap it in array and store directly under paramsToResources
 	
-	  var data = result.length === 0 && json ? [json] : [].concat(result);
+	  var data = result.length === 0 && Object.keys(entities).length !== 0 && json ? [json] : [].concat(result);
 	
 	  return {
 	    resources: result.length !== 0 ? entities : {},
@@ -29938,13 +29939,13 @@ module.exports =
 	
 	var _helpers = __webpack_require__(2);
 	
+	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+	
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 	
 	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 	
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-	
-	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 	
 	function normalizeMap(originalMap, state) {
 	  if (!originalMap.resources) return originalMap;
@@ -29952,7 +29953,8 @@ module.exports =
 	  return Object.keys(originalMap.resources).reduce(function (newMap, key) {
 	    var resource = (0, _helpers.normalizeResourceDefinition)(originalMap.resources[key]);
 	    originalMap.resources[key] = resource;
-	    return (0, _lodash.merge)(newMap, _defineProperty({}, key, (0, _helpers.findInState)(state, resource) || resource.defaultValue));
+	    newMap[key] = (0, _helpers.findInState)(state, resource) || resource.defaultValue;
+	    return newMap;
 	  }, originalMap);
 	}
 	
@@ -29966,7 +29968,7 @@ module.exports =
 	  };
 	
 	  // expose our 'fetchResource' dispatch func so can be called by client manually
-	  var _mapDispatchToProps = (0, _lodash.merge)({}, mapDispatchToProps, {
+	  var _mapDispatchToProps = Object.assign({}, mapDispatchToProps, {
 	    fetchResource: _actions.fetchResource,
 	    prepopulateResource: _actions.prepopulateResource,
 	    invalidateResource: _actions.invalidateResource
@@ -30005,7 +30007,7 @@ module.exports =
 	        value: function componentDidMount() {
 	          _get(Object.getPrototypeOf(TptConnect.prototype), 'componentDidMount', this).call(this);
 	          this.loadResources(this.allResources);
-	          this._oldResources = (0, _lodash.merge)({}, this.allResources);
+	          this._oldResources = Object.assign({}, this.allResources);
 	        }
 	      }, {
 	        key: 'componentWillReceiveProps',
@@ -30017,7 +30019,7 @@ module.exports =
 	          }
 	
 	          (_get2 = _get(Object.getPrototypeOf(TptConnect.prototype), 'componentWillReceiveProps', this)).call.apply(_get2, [this].concat(args));
-	          this._oldResources = (0, _lodash.merge)({}, this.allResources);
+	          this._oldResources = Object.assign({}, this.allResources);
 	        }
 	      }, {
 	        key: 'componentDidUpdate',
@@ -30026,7 +30028,7 @@ module.exports =
 	
 	          this._oldResources || (this._oldResources = this.allResources);
 	          this.loadResources(Object.keys(this.allResources).reduce(function (changedResources, key) {
-	            return (0, _lodash.isEqual)(_this3._oldResources[key], _this3.allResources[key]) ? changedResources : (0, _lodash.merge)({}, changedResources, _defineProperty({}, key, _this3.allResources[key]));
+	            return (0, _lodash.isEqual)(_this3._oldResources[key], _this3.allResources[key]) ? changedResources : Object.assign({}, changedResources, _defineProperty({}, key, _this3.allResources[key]));
 	          }, {}));
 	        }
 	      }, {
