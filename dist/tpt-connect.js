@@ -29996,7 +29996,7 @@ module.exports =
 	
 	          Object.keys(resources).forEach(function (key) {
 	            var resource = resources[key];
-	            if (resource.auto && !(0, _helpers.findInState)(_this2.state.storeState, resource)) {
+	            if (resource.auto && !(0, _helpers.findInState)(_this2.store.getState(), resource)) {
 	              props.prepopulateResource(resource);
 	              props.fetchResource(resource);
 	            }

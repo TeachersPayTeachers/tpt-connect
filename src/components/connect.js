@@ -36,7 +36,7 @@ export default function connect(mapStateToProps, mapDispatchToProps = {}, mergeP
         const { props } = this.renderedElement;
         Object.keys(resources).forEach((key) => {
           const resource = resources[key];
-          if (resource.auto && !findInState(this.state.storeState, resource)) {
+          if (resource.auto && !findInState(this.store.getState(), resource)) {
             props.prepopulateResource(resource);
             props.fetchResource(resource);
           }
