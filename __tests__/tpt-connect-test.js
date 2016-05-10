@@ -162,9 +162,9 @@ describe('tpt-connect', () => {
           });
         });
 
-        it('sends another request if used the `fetchResource` method', (done) => {
+        it('sends another request if used the `dispatchRequest` method', (done) => {
           renderComponent();
-          domElement._props.fetchResource({ ...resourceDefinition, ...{ method: 'GET' } });
+          domElement._props.dispatchRequest({ ...resourceDefinition, ...{ method: 'GET' } });
           defer(() => {
             expect(window.fetch.calls.count()).toEqual(2);
             done();
@@ -343,7 +343,7 @@ describe('tpt-connect', () => {
             users: usersDefinition
           }
         }));
-        domElement._props.fetchResource(usersDefinition);
+        domElement._props.dispatchRequest(usersDefinition);
         defer(() => {
           expect(window.fetch.calls.count()).toEqual(1);
           const state = provider.props.store.getState().connect;
@@ -353,9 +353,37 @@ describe('tpt-connect', () => {
         });
       });
     });
+  });
 
-    describe('when data is in state', () => {
-      it('still fires a new request', () => {
+  describe('Global options', () => {
+    const spyFunc = jasmine.createSpy();
+    const mappingFunc = () => ({
+      resources: { users: { ...resourceDefinition } }
+    });
+
+    beforeEach(() => {
+      spyFunc.calls.reset();
+      const _NewComponent = connect(mappingFunc)(_Component);
+      provider = TestUtils.renderIntoDocument(
+        <ConnectProvider onSuccess={spyFunc}>
+          <_NewComponent />
+        </ConnectProvider>
+      );
+      domElement = ReactDOM.findDOMNode(provider);
+    });
+
+    it('executes functions passed in directly to dispatchRequest AND global funcs', (done) => {
+      domElement._props.dispatchRequest({ ...resourceDefinition, ...{ method: 'GET' } }, { onSuccess: spyFunc });
+      defer(() => {
+        expect(spyFunc.calls.count()).toEqual(3);
+        done();
+      });
+    });
+
+    it('executes functions passed in as props to Provider', (done) => {
+      defer(() => {
+        expect(spyFunc.calls.count()).toEqual(1);
+        done();
       });
     });
   });

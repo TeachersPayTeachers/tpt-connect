@@ -5,23 +5,25 @@ import { apiMiddleware } from 'redux-api-middleware';
 
 class Provider extends Component {
   static childContextTypes = {
-    store: PropTypes.object
+    store: PropTypes.object,
+    options: PropTypes.object
   };
 
-  constructor(props) {
-    super(props);
+  constructor(props, context) {
+    super(props, context);
+    const { store, ...options } = props;
     this.state = {
-      store: props.store || createStore(
+      store: store || createStore(
         combineReducers({ connect: connectReducer }),
         applyMiddleware(apiMiddleware)
-      )
+      ),
+      options
     };
   }
 
   getChildContext() {
-    return {
-      store: this.state.store
-    };
+    const { store, options } = this.state;
+    return { store, options };
   }
 
   render() {

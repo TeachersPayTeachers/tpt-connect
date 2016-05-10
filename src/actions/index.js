@@ -31,7 +31,7 @@ export function computePayload(resourceDefinition, meta, json) {
   };
 }
 
-function onResponse(resourceDefinition, meta) {
+function onResponse(resourceDefinition, meta, opts) {
   return (action, state, response) => {
     meta = merge({}, {
       didInvalidate: false,
@@ -41,9 +41,11 @@ function onResponse(resourceDefinition, meta) {
 
     return response.json().then((json) => {
       logger.info('Fetched resource successfully:', resourceDefinition);
+      opts.onSuccess && opts.onSuccess(json);
       return computePayload(resourceDefinition, { ...meta, response }, json);
-    }, () => {
+    }, (err) => {
       logger.info('Failed to fetch resource:', resourceDefinition);
+      opts.onError && opts.onError(err);
       meta = merge({}, meta, { isSuccess: false, isError: true });
       return computePayload(resourceDefinition, { ...meta, response });
     });
@@ -72,9 +74,9 @@ export function prepopulateResource(resourceDefinition) {
   };
 }
 
-export function fetchResource(resourceDefinition) {
+export function dispatchRequest(resourceDefinition, options) {
   const { headers, method, url: endpoint, body } = resourceDefinition;
-  logger.info('Fetching resource:', resourceDefinition);
+  logger.info('Dispatching request:', resourceDefinition);
   return {
     [CALL_API]: {
       credentials: 'include',
@@ -95,13 +97,13 @@ export function fetchResource(resourceDefinition) {
         payload: onResponse(resourceDefinition, {
           isError: false,
           isSuccess: true
-        })
+        }, options)
       }, {
         type: CONNECT_FAILURE,
         payload: onResponse(resourceDefinition, {
           isError: true,
           isSuccess: false
-        })
+        }, options)
       }]
     }
   };
