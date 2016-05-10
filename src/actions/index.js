@@ -39,16 +39,18 @@ function onResponse(resourceDefinition, meta, opts) {
       lastUpdated: Date.now()
     }, meta);
 
-    return response.json().then((json) => {
-      logger.info('Fetched resource successfully:', resourceDefinition);
-      opts.onSuccess && opts.onSuccess(json);
-      return computePayload(resourceDefinition, { ...meta, response }, json);
-    }, (err) => {
-      logger.info('Failed to fetch resource:', resourceDefinition);
-      opts.onError && opts.onError(err);
-      meta = merge({}, meta, { isSuccess: false, isError: true });
-      return computePayload(resourceDefinition, { ...meta, response });
-    });
+    const contentType = response.headers.get('content-type');
+    if (response.ok && contentType && ~contentType.indexOf('application/json')) {
+      return response.json().then((json) => {
+        logger.info('Fetched resource successfully:', resourceDefinition);
+        opts.onSuccess && opts.onSuccess(response, json);
+        return computePayload(resourceDefinition, { ...meta, response }, json);
+      });
+    }
+    logger.info('Failed to fetch resource:', resourceDefinition);
+    opts.onError && opts.onError(response);
+    meta = merge({}, meta, { isSuccess: false, isError: true });
+    return computePayload(resourceDefinition, { ...meta, response });
   };
 }
 
@@ -80,6 +82,7 @@ export function dispatchRequest(resourceDefinition, options) {
   return {
     [CALL_API]: {
       credentials: 'include',
+      redirect: 'manual',
       headers,
       method,
       endpoint,
