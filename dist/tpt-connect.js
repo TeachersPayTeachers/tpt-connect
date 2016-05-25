@@ -54,28 +54,20 @@ module.exports =
 
 	'use strict';
 	
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
+	exports.__esModule = true;
 	exports.connectMiddleware = exports.connectReducer = exports.normalize = exports.arrayOf = exports.Schema = exports.ConnectProvider = exports.connect = undefined;
 	
 	var _helpers = __webpack_require__(2);
 	
-	var _loop = function _loop(_key2) {
-	  if (_key2 === "default") return 'continue';
-	  Object.defineProperty(exports, _key2, {
+	Object.keys(_helpers).forEach(function (key) {
+	  if (key === "default") return;
+	  Object.defineProperty(exports, key, {
 	    enumerable: true,
 	    get: function get() {
-	      return _helpers[_key2];
+	      return _helpers[key];
 	    }
 	  });
-	};
-	
-	for (var _key2 in _helpers) {
-	  var _ret = _loop(_key2);
-	
-	  if (_ret === 'continue') continue;
-	}
+	});
 	
 	var _normalizr = __webpack_require__(44);
 	
@@ -131,9 +123,7 @@ module.exports =
 
 	'use strict';
 	
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
+	exports.__esModule = true;
 	exports.logger = undefined;
 	
 	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
@@ -1839,7 +1829,7 @@ module.exports =
 /* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {/*! https://mths.be/punycode v1.4.0 by @mathias */
+	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {/*! https://mths.be/punycode v1.4.1 by @mathias */
 	;(function(root) {
 	
 		/** Detect free variables */
@@ -2327,7 +2317,7 @@ module.exports =
 			 * @memberOf punycode
 			 * @type String
 			 */
-			'version': '1.3.2',
+			'version': '1.4.1',
 			/**
 			 * An object of methods to convert from JavaScript's internal character
 			 * representation (UCS-2) to Unicode code points, and back.
@@ -2580,7 +2570,7 @@ module.exports =
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {/**
 	 * @license
-	 * lodash 4.5.1 (Custom Build) <https://lodash.com/>
+	 * lodash 4.5.0 (Custom Build) <https://lodash.com/>
 	 * Build: `lodash -d -o ./foo/lodash.js`
 	 * Copyright 2012-2016 The Dojo Foundation <http://dojofoundation.org/>
 	 * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
@@ -2593,7 +2583,7 @@ module.exports =
 	  var undefined;
 	
 	  /** Used as the semantic version number. */
-	  var VERSION = '4.5.1';
+	  var VERSION = '4.5.0';
 	
 	  /** Used to compose bitmasks for wrapper metadata. */
 	  var BIND_FLAG = 1,
@@ -3614,26 +3604,6 @@ module.exports =
 	  }
 	
 	  /**
-	   * Gets the number of `placeholder` occurrences in `array`.
-	   *
-	   * @private
-	   * @param {Array} array The array to inspect.
-	   * @param {*} placeholder The placeholder to search for.
-	   * @returns {number} Returns the placeholder count.
-	   */
-	  function countHolders(array, placeholder) {
-	    var length = array.length,
-	        result = 0;
-	
-	    while (length--) {
-	      if (array[length] === placeholder) {
-	        result++;
-	      }
-	    }
-	    return result;
-	  }
-	
-	  /**
 	   * Used by `_.deburr` to convert latin-1 supplementary letters to basic latin letters.
 	   *
 	   * @private
@@ -3771,8 +3741,7 @@ module.exports =
 	        result = [];
 	
 	    while (++index < length) {
-	      var value = array[index];
-	      if (value === placeholder || value === PLACEHOLDER) {
+	      if (array[index] === placeholder) {
 	        array[index] = PLACEHOLDER;
 	        result[++resIndex] = index;
 	      }
@@ -4762,7 +4731,8 @@ module.exports =
 	     */
 	    function assignValue(object, key, value) {
 	      var objValue = object[key];
-	      if (!(hasOwnProperty.call(object, key) && eq(objValue, value)) ||
+	      if ((!eq(objValue, value) ||
+	            (eq(objValue, objectProto[key]) && !hasOwnProperty.call(object, key))) ||
 	          (value === undefined && !(key in object))) {
 	        object[key] = value;
 	      }
@@ -6472,28 +6442,23 @@ module.exports =
 	     * @param {Array|Object} args The provided arguments.
 	     * @param {Array} partials The arguments to prepend to those provided.
 	     * @param {Array} holders The `partials` placeholder indexes.
-	     * @params {boolean} [isCurried] Specify composing for a curried function.
 	     * @returns {Array} Returns the new array of composed arguments.
 	     */
-	    function composeArgs(args, partials, holders, isCurried) {
-	      var argsIndex = -1,
-	          argsLength = args.length,
-	          holdersLength = holders.length,
+	    function composeArgs(args, partials, holders) {
+	      var holdersLength = holders.length,
+	          argsIndex = -1,
+	          argsLength = nativeMax(args.length - holdersLength, 0),
 	          leftIndex = -1,
 	          leftLength = partials.length,
-	          rangeLength = nativeMax(argsLength - holdersLength, 0),
-	          result = Array(leftLength + rangeLength),
-	          isUncurried = !isCurried;
+	          result = Array(leftLength + argsLength);
 	
 	      while (++leftIndex < leftLength) {
 	        result[leftIndex] = partials[leftIndex];
 	      }
 	      while (++argsIndex < holdersLength) {
-	        if (isUncurried || argsIndex < argsLength) {
-	          result[holders[argsIndex]] = args[argsIndex];
-	        }
+	        result[holders[argsIndex]] = args[argsIndex];
 	      }
-	      while (rangeLength--) {
+	      while (argsLength--) {
 	        result[leftIndex++] = args[argsIndex++];
 	      }
 	      return result;
@@ -6507,21 +6472,18 @@ module.exports =
 	     * @param {Array|Object} args The provided arguments.
 	     * @param {Array} partials The arguments to append to those provided.
 	     * @param {Array} holders The `partials` placeholder indexes.
-	     * @params {boolean} [isCurried] Specify composing for a curried function.
 	     * @returns {Array} Returns the new array of composed arguments.
 	     */
-	    function composeArgsRight(args, partials, holders, isCurried) {
-	      var argsIndex = -1,
-	          argsLength = args.length,
-	          holdersIndex = -1,
+	    function composeArgsRight(args, partials, holders) {
+	      var holdersIndex = -1,
 	          holdersLength = holders.length,
+	          argsIndex = -1,
+	          argsLength = nativeMax(args.length - holdersLength, 0),
 	          rightIndex = -1,
 	          rightLength = partials.length,
-	          rangeLength = nativeMax(argsLength - holdersLength, 0),
-	          result = Array(rangeLength + rightLength),
-	          isUncurried = !isCurried;
+	          result = Array(argsLength + rightLength);
 	
-	      while (++argsIndex < rangeLength) {
+	      while (++argsIndex < argsLength) {
 	        result[argsIndex] = args[argsIndex];
 	      }
 	      var offset = argsIndex;
@@ -6529,9 +6491,7 @@ module.exports =
 	        result[offset + rightIndex] = partials[rightIndex];
 	      }
 	      while (++holdersIndex < holdersLength) {
-	        if (isUncurried || argsIndex < argsLength) {
-	          result[offset + holders[holdersIndex]] = args[argsIndex++];
-	        }
+	        result[offset + holders[holdersIndex]] = args[argsIndex++];
 	      }
 	      return result;
 	    }
@@ -6815,9 +6775,10 @@ module.exports =
 	
 	      function wrapper() {
 	        var length = arguments.length,
-	            args = Array(length),
 	            index = length,
-	            placeholder = getPlaceholder(wrapper);
+	            args = Array(length),
+	            fn = (this && this !== root && this instanceof wrapper) ? Ctor : func,
+	            placeholder = lodash.placeholder || wrapper.placeholder;
 	
 	        while (index--) {
 	          args[index] = arguments[index];
@@ -6827,13 +6788,9 @@ module.exports =
 	          : replaceHolders(args, placeholder);
 	
 	        length -= holders.length;
-	        if (length < arity) {
-	          return createRecurryWrapper(
-	            func, bitmask, createHybridWrapper, wrapper.placeholder, undefined,
-	            args, holders, undefined, undefined, arity - length);
-	        }
-	        var fn = (this && this !== root && this instanceof wrapper) ? Ctor : func;
-	        return apply(fn, this, args);
+	        return length < arity
+	          ? createRecurryWrapper(func, bitmask, createHybridWrapper, placeholder, undefined, args, holders, undefined, undefined, arity - length)
+	          : apply(fn, this, args);
 	      }
 	      return wrapper;
 	    }
@@ -6921,7 +6878,8 @@ module.exports =
 	      var isAry = bitmask & ARY_FLAG,
 	          isBind = bitmask & BIND_FLAG,
 	          isBindKey = bitmask & BIND_KEY_FLAG,
-	          isCurried = bitmask & (CURRY_FLAG | CURRY_RIGHT_FLAG),
+	          isCurry = bitmask & CURRY_FLAG,
+	          isCurryRight = bitmask & CURRY_RIGHT_FLAG,
 	          isFlip = bitmask & FLIP_FLAG,
 	          Ctor = isBindKey ? undefined : createCtorWrapper(func);
 	
@@ -6933,34 +6891,33 @@ module.exports =
 	        while (index--) {
 	          args[index] = arguments[index];
 	        }
-	        if (isCurried) {
-	          var placeholder = getPlaceholder(wrapper),
-	              holdersCount = countHolders(args, placeholder);
-	        }
 	        if (partials) {
-	          args = composeArgs(args, partials, holders, isCurried);
+	          args = composeArgs(args, partials, holders);
 	        }
 	        if (partialsRight) {
-	          args = composeArgsRight(args, partialsRight, holdersRight, isCurried);
+	          args = composeArgsRight(args, partialsRight, holdersRight);
 	        }
-	        length -= holdersCount;
-	        if (isCurried && length < arity) {
-	          var newHolders = replaceHolders(args, placeholder);
-	          return createRecurryWrapper(
-	            func, bitmask, createHybridWrapper, wrapper.placeholder, thisArg,
-	            args, newHolders, argPos, ary, arity - length
-	          );
+	        if (isCurry || isCurryRight) {
+	          var placeholder = lodash.placeholder || wrapper.placeholder,
+	              argsHolders = replaceHolders(args, placeholder);
+	
+	          length -= argsHolders.length;
+	          if (length < arity) {
+	            return createRecurryWrapper(
+	              func, bitmask, createHybridWrapper, placeholder, thisArg, args,
+	              argsHolders, argPos, ary, arity - length
+	            );
+	          }
 	        }
 	        var thisBinding = isBind ? thisArg : this,
 	            fn = isBindKey ? thisBinding[func] : func;
 	
-	        length = args.length;
 	        if (argPos) {
 	          args = reorder(args, argPos);
-	        } else if (isFlip && length > 1) {
+	        } else if (isFlip && args.length > 1) {
 	          args.reverse();
 	        }
-	        if (isAry && ary < length) {
+	        if (isAry && ary < args.length) {
 	          args.length = ary;
 	        }
 	        if (this && this !== root && this instanceof wrapper) {
@@ -7098,7 +7055,7 @@ module.exports =
 	     * @param {Function} func The function to wrap.
 	     * @param {number} bitmask The bitmask of wrapper flags. See `createWrapper` for more details.
 	     * @param {Function} wrapFunc The function to create the `func` wrapper.
-	     * @param {*} placeholder The placeholder value.
+	     * @param {*} placeholder The placeholder to replace.
 	     * @param {*} [thisArg] The `this` binding of `func`.
 	     * @param {Array} [partials] The arguments to prepend to those provided to the new function.
 	     * @param {Array} [holders] The `partials` placeholder indexes.
@@ -7110,7 +7067,7 @@ module.exports =
 	    function createRecurryWrapper(func, bitmask, wrapFunc, placeholder, thisArg, partials, holders, argPos, ary, arity) {
 	      var isCurry = bitmask & CURRY_FLAG,
 	          newArgPos = argPos ? copyArray(argPos) : undefined,
-	          newHolders = isCurry ? holders : undefined,
+	          newsHolders = isCurry ? holders : undefined,
 	          newHoldersRight = isCurry ? undefined : holders,
 	          newPartials = isCurry ? partials : undefined,
 	          newPartialsRight = isCurry ? undefined : partials;
@@ -7122,7 +7079,7 @@ module.exports =
 	        bitmask &= ~(BIND_FLAG | BIND_KEY_FLAG);
 	      }
 	      var newData = [
-	        func, bitmask, thisArg, newPartials, newHolders, newPartialsRight,
+	        func, bitmask, thisArg, newPartials, newsHolders, newPartialsRight,
 	        newHoldersRight, newArgPos, ary, arity
 	      ];
 	
@@ -7544,18 +7501,6 @@ module.exports =
 	    }
 	
 	    /**
-	     * Gets the argument placeholder value for `func`.
-	     *
-	     * @private
-	     * @param {Function} func The function to inspect.
-	     * @returns {*} Returns the placeholder value.
-	     */
-	    function getPlaceholder(func) {
-	      var object = hasOwnProperty.call(lodash, 'placeholder') ? lodash : func;
-	      return object.placeholder;
-	    }
-	
-	    /**
 	     * Creates an array of the own symbol properties of `object`.
 	     *
 	     * @private
@@ -7681,9 +7626,11 @@ module.exports =
 	     * @returns {Object} Returns the initialized clone.
 	     */
 	    function initCloneObject(object) {
-	      return (isFunction(object.constructor) && !isPrototype(object))
-	        ? baseCreate(getPrototypeOf(object))
-	        : {};
+	      if (isPrototype(object)) {
+	        return {};
+	      }
+	      var Ctor = object.constructor;
+	      return baseCreate(isFunction(Ctor) ? Ctor.prototype : undefined);
 	    }
 	
 	    /**
@@ -7830,7 +7777,7 @@ module.exports =
 	     */
 	    function isPrototype(value) {
 	      var Ctor = value && value.constructor,
-	          proto = (isFunction(Ctor) && Ctor.prototype) || objectProto;
+	          proto = (typeof Ctor == 'function' && Ctor.prototype) || objectProto;
 	
 	      return value === proto;
 	    }
@@ -7869,9 +7816,9 @@ module.exports =
 	          isCommon = newBitmask < (BIND_FLAG | BIND_KEY_FLAG | ARY_FLAG);
 	
 	      var isCombo =
-	        ((srcBitmask == ARY_FLAG) && (bitmask == CURRY_FLAG)) ||
-	        ((srcBitmask == ARY_FLAG) && (bitmask == REARG_FLAG) && (data[7].length <= source[8])) ||
-	        ((srcBitmask == (ARY_FLAG | REARG_FLAG)) && (source[7].length <= source[8]) && (bitmask == CURRY_FLAG));
+	        (srcBitmask == ARY_FLAG && (bitmask == CURRY_FLAG)) ||
+	        (srcBitmask == ARY_FLAG && (bitmask == REARG_FLAG) && (data[7].length <= source[8])) ||
+	        (srcBitmask == (ARY_FLAG | REARG_FLAG) && (source[7].length <= source[8]) && (bitmask == CURRY_FLAG));
 	
 	      // Exit early if metadata can't be merged.
 	      if (!(isCommon || isCombo)) {
@@ -7881,7 +7828,7 @@ module.exports =
 	      if (srcBitmask & BIND_FLAG) {
 	        data[2] = source[2];
 	        // Set when currying a bound function.
-	        newBitmask |= bitmask & BIND_FLAG ? 0 : CURRY_BOUND_FLAG;
+	        newBitmask |= (bitmask & BIND_FLAG) ? 0 : CURRY_BOUND_FLAG;
 	      }
 	      // Compose partial arguments.
 	      var value = source[3];
@@ -8813,8 +8760,7 @@ module.exports =
 	     * [`SameValueZero`](http://ecma-international.org/ecma-262/6.0/#sec-samevaluezero)
 	     * for equality comparisons.
 	     *
-	     * **Note:** Unlike `_.without`, this method mutates `array`. Use `_.remove`
-	     * to remove elements from an array by predicate.
+	     * **Note:** Unlike `_.without`, this method mutates `array`.
 	     *
 	     * @static
 	     * @memberOf _
@@ -8919,11 +8865,10 @@ module.exports =
 	
 	    /**
 	     * Removes all elements from `array` that `predicate` returns truthy for
-	     * and returns an array of the removed elements. The predicate is invoked
-	     * with three arguments: (value, index, array).
+	     * and returns an array of the removed elements. The predicate is invoked with
+	     * three arguments: (value, index, array).
 	     *
-	     * **Note:** Unlike `_.filter`, this method mutates `array`. Use `_.pull`
-	     * to pull elements from an array by value.
+	     * **Note:** Unlike `_.filter`, this method mutates `array`.
 	     *
 	     * @static
 	     * @memberOf _
@@ -11086,7 +11031,9 @@ module.exports =
 	    var bind = rest(function(func, thisArg, partials) {
 	      var bitmask = BIND_FLAG;
 	      if (partials.length) {
-	        var holders = replaceHolders(partials, getPlaceholder(bind));
+	        var placeholder = lodash.placeholder || bind.placeholder,
+	            holders = replaceHolders(partials, placeholder);
+	
 	        bitmask |= PARTIAL_FLAG;
 	      }
 	      return createWrapper(func, bitmask, thisArg, partials, holders);
@@ -11139,7 +11086,9 @@ module.exports =
 	    var bindKey = rest(function(object, key, partials) {
 	      var bitmask = BIND_FLAG | BIND_KEY_FLAG;
 	      if (partials.length) {
-	        var holders = replaceHolders(partials, getPlaceholder(bindKey));
+	        var placeholder = lodash.placeholder || bindKey.placeholder,
+	            holders = replaceHolders(partials, placeholder);
+	
 	        bitmask |= PARTIAL_FLAG;
 	      }
 	      return createWrapper(key, bitmask, object, partials, holders);
@@ -11188,7 +11137,7 @@ module.exports =
 	    function curry(func, arity, guard) {
 	      arity = guard ? undefined : arity;
 	      var result = createWrapper(func, CURRY_FLAG, undefined, undefined, undefined, undefined, undefined, arity);
-	      result.placeholder = curry.placeholder;
+	      result.placeholder = lodash.placeholder || curry.placeholder;
 	      return result;
 	    }
 	
@@ -11232,7 +11181,7 @@ module.exports =
 	    function curryRight(func, arity, guard) {
 	      arity = guard ? undefined : arity;
 	      var result = createWrapper(func, CURRY_RIGHT_FLAG, undefined, undefined, undefined, undefined, undefined, arity);
-	      result.placeholder = curryRight.placeholder;
+	      result.placeholder = lodash.placeholder || curryRight.placeholder;
 	      return result;
 	    }
 	
@@ -11656,7 +11605,9 @@ module.exports =
 	     * // => 'hi fred'
 	     */
 	    var partial = rest(function(func, partials) {
-	      var holders = replaceHolders(partials, getPlaceholder(partial));
+	      var placeholder = lodash.placeholder || partial.placeholder,
+	          holders = replaceHolders(partials, placeholder);
+	
 	      return createWrapper(func, PARTIAL_FLAG, undefined, partials, holders);
 	    });
 	
@@ -11692,7 +11643,9 @@ module.exports =
 	     * // => 'hello fred'
 	     */
 	    var partialRight = rest(function(func, partials) {
-	      var holders = replaceHolders(partials, getPlaceholder(partialRight));
+	      var placeholder = lodash.placeholder || partialRight.placeholder,
+	          holders = replaceHolders(partials, placeholder);
+	
 	      return createWrapper(func, PARTIAL_RIGHT_FLAG, undefined, partials, holders);
 	    });
 	
@@ -12491,8 +12444,9 @@ module.exports =
 	      if (!isObjectLike(value)) {
 	        return false;
 	      }
+	      var Ctor = value.constructor;
 	      return (objectToString.call(value) == errorTag) ||
-	        (typeof value.message == 'string' && typeof value.name == 'string');
+	        (typeof Ctor == 'function' && objectToString.call(Ctor.prototype) == errorTag);
 	    }
 	
 	    /**
@@ -12905,7 +12859,10 @@ module.exports =
 	          objectToString.call(value) != objectTag || isHostObject(value)) {
 	        return false;
 	      }
-	      var proto = getPrototypeOf(value);
+	      var proto = objectProto;
+	      if (typeof value.constructor == 'function') {
+	        proto = getPrototypeOf(value);
+	      }
 	      if (proto === null) {
 	        return true;
 	      }
@@ -14119,8 +14076,7 @@ module.exports =
 	    /**
 	     * The opposite of `_.mapValues`; this method creates an object with the
 	     * same values as `object` and keys generated by running each own enumerable
-	     * property of `object` through `iteratee`. The iteratee is invoked with
-	     * three arguments: (value, key, object).
+	     * property of `object` through `iteratee`.
 	     *
 	     * @static
 	     * @memberOf _
@@ -14148,7 +14104,7 @@ module.exports =
 	    /**
 	     * Creates an object with the same keys as `object` and values generated by
 	     * running each own enumerable property of `object` through `iteratee`. The
-	     * iteratee is invoked with three arguments: (value, key, object).
+	     * iteratee function is invoked with three arguments: (value, key, object).
 	     *
 	     * @static
 	     * @memberOf _
@@ -14281,10 +14237,9 @@ module.exports =
 	    });
 	
 	    /**
-	     * The opposite of `_.pickBy`; this method creates an object composed of
-	     * the own and inherited enumerable properties of `object` that `predicate`
-	     * doesn't return truthy for. The predicate is invoked with two arguments:
-	     * (value, key).
+	     * The opposite of `_.pickBy`; this method creates an object composed of the
+	     * own and inherited enumerable properties of `object` that `predicate`
+	     * doesn't return truthy for.
 	     *
 	     * @static
 	     * @memberOf _
@@ -14300,7 +14255,7 @@ module.exports =
 	     * // => { 'b': '2' }
 	     */
 	    function omitBy(object, predicate) {
-	      predicate = getIteratee(predicate);
+	      predicate = getIteratee(predicate, 2);
 	      return basePickBy(object, function(value, key) {
 	        return !predicate(value, key);
 	      });
@@ -14345,7 +14300,7 @@ module.exports =
 	     * // => { 'a': 1, 'c': 3 }
 	     */
 	    function pickBy(object, predicate) {
-	      return object == null ? {} : basePickBy(object, getIteratee(predicate));
+	      return object == null ? {} : basePickBy(object, getIteratee(predicate, 2));
 	    }
 	
 	    /**
@@ -14535,7 +14490,7 @@ module.exports =
 	          if (isArr) {
 	            accumulator = isArray(object) ? new Ctor : [];
 	          } else {
-	            accumulator = isFunction(Ctor) ? baseCreate(getPrototypeOf(object)) : {};
+	            accumulator = baseCreate(isFunction(Ctor) ? Ctor.prototype : undefined);
 	          }
 	        } else {
 	          accumulator = {};
@@ -16531,8 +16486,8 @@ module.exports =
 	    var rangeRight = createRange(true);
 	
 	    /**
-	     * Invokes the iteratee `n` times, returning an array of the results of
-	     * each invocation. The iteratee is invoked with one argument; (index).
+	     * Invokes the iteratee function `n` times, returning an array of the results
+	     * of each invocation. The iteratee is invoked with one argument; (index).
 	     *
 	     * @static
 	     * @memberOf _
@@ -20287,6 +20242,9 @@ module.exports =
 	var queueIndex = -1;
 	
 	function cleanUpNextTick() {
+	    if (!draining || !currentQueue) {
+	        return;
+	    }
 	    draining = false;
 	    if (currentQueue.length) {
 	        queue = currentQueue.concat(queue);
@@ -24222,10 +24180,8 @@ module.exports =
 
 /***/ },
 /* 107 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
-	var isFunction = __webpack_require__(69);
-	
 	/** Used for built-in method references. */
 	var objectProto = Object.prototype;
 	
@@ -24238,7 +24194,7 @@ module.exports =
 	 */
 	function isPrototype(value) {
 	  var Ctor = value && value.constructor,
-	      proto = (isFunction(Ctor) && Ctor.prototype) || objectProto;
+	      proto = (typeof Ctor == 'function' && Ctor.prototype) || objectProto;
 	
 	  return value === proto;
 	}
@@ -24428,7 +24384,7 @@ module.exports =
 	/**
 	 * Creates an object with the same keys as `object` and values generated by
 	 * running each own enumerable property of `object` through `iteratee`. The
-	 * iteratee is invoked with three arguments: (value, key, object).
+	 * iteratee function is invoked with three arguments: (value, key, object).
 	 *
 	 * @static
 	 * @memberOf _
@@ -25365,9 +25321,7 @@ module.exports =
 
 	'use strict';
 	
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
+	exports.__esModule = true;
 	exports.CONNECT_INVALIDATE = exports.CONNECT_PREPOPULATE = exports.CONNECT_FAILURE = exports.CONNECT_SUCCESS = exports.CONNECT_REQUEST = undefined;
 	
 	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
@@ -25385,8 +25339,6 @@ module.exports =
 	
 	var _normalizr = __webpack_require__(44);
 	
-	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-	
 	var CONNECT_REQUEST = exports.CONNECT_REQUEST = 'CONNECT_REQUEST';
 	var CONNECT_SUCCESS = exports.CONNECT_SUCCESS = 'CONNECT_SUCCESS';
 	var CONNECT_FAILURE = exports.CONNECT_FAILURE = 'CONNECT_FAILURE';
@@ -25394,6 +25346,8 @@ module.exports =
 	var CONNECT_INVALIDATE = exports.CONNECT_INVALIDATE = 'CONNECT_INVALIDATE';
 	
 	function computePayload(resourceDefinition, meta, json) {
+	  var _data, _paramsToResources;
+	
 	  var schema = resourceDefinition.schema;
 	  var _resourceDefinition$n = resourceDefinition.normalize;
 	  var normalize = _resourceDefinition$n === undefined ? _normalizr.normalize : _resourceDefinition$n;
@@ -25411,10 +25365,10 @@ module.exports =
 	
 	  return {
 	    resources: result.length !== 0 ? entities : {},
-	    paramsToResources: _defineProperty({}, resourceDefinition.requestKey, {
+	    paramsToResources: (_paramsToResources = {}, _paramsToResources[resourceDefinition.requestKey] = {
 	      meta: meta,
-	      data: _defineProperty({}, (0, _helpers.schemaKey)(resourceDefinition), data)
-	    })
+	      data: (_data = {}, _data[(0, _helpers.schemaKey)(resourceDefinition)] = data, _data)
+	    }, _paramsToResources)
 	  };
 	}
 	
@@ -25460,13 +25414,15 @@ module.exports =
 	}
 	
 	function fetchResource(resourceDefinition) {
+	  var _ref2;
+	
 	  var headers = resourceDefinition.headers;
 	  var method = resourceDefinition.method;
 	  var endpoint = resourceDefinition.url;
 	  var body = resourceDefinition.body;
 	
 	  _helpers.logger.info('Fetching resource:', resourceDefinition);
-	  return _defineProperty({}, _reduxApiMiddleware.CALL_API, {
+	  return _ref2 = {}, _ref2[_reduxApiMiddleware.CALL_API] = {
 	    credentials: 'include',
 	    headers: headers,
 	    method: method,
@@ -25493,7 +25449,7 @@ module.exports =
 	        isSuccess: false
 	      })
 	    }]
-	  });
+	  }, _ref2;
 	}
 	
 	/*
@@ -26306,7 +26262,7 @@ module.exports =
 	 */
 	function validateRSAA(action) {
 	  var validationErrors = [];
-	  var validCallAPIKeys = ['endpoint', 'method', 'body', 'headers', 'credentials', 'bailout', 'types'];
+	  var validCallAPIKeys = ['endpoint', 'method', 'body', 'headers', 'credentials', 'bailout', 'types', 'redirect'];
 	  var validMethods = ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'];
 	  var validCredentials = ['omit', 'same-origin', 'include'];
 	
@@ -27384,31 +27340,32 @@ module.exports =
 	 * @returns {promise|undefined}
 	 */
 	function getJSON(res) {
-	  var contentType;
+	  var contentType, emptyCodes;
 	  return _regeneratorRuntime.async(function getJSON$(context$1$0) {
 	    while (1) switch (context$1$0.prev = context$1$0.next) {
 	      case 0:
 	        contentType = res.headers.get('Content-Type');
+	        emptyCodes = [204, 205];
 	
-	        if (!(contentType && ~contentType.indexOf('json'))) {
-	          context$1$0.next = 7;
+	        if (!(! ~emptyCodes.indexOf(res.status) && contentType && ~contentType.indexOf('json'))) {
+	          context$1$0.next = 8;
 	          break;
 	        }
 	
-	        context$1$0.next = 4;
+	        context$1$0.next = 5;
 	        return _regeneratorRuntime.awrap(res.json());
 	
-	      case 4:
+	      case 5:
 	        return context$1$0.abrupt('return', context$1$0.sent);
 	
-	      case 7:
-	        context$1$0.next = 9;
+	      case 8:
+	        context$1$0.next = 10;
 	        return _regeneratorRuntime.awrap(_Promise.resolve());
 	
-	      case 9:
+	      case 10:
 	        return context$1$0.abrupt('return', context$1$0.sent);
 	
-	      case 10:
+	      case 11:
 	      case 'end':
 	        return context$1$0.stop();
 	    }
@@ -29242,7 +29199,7 @@ module.exports =
 	
 	  return function (next) {
 	    return function callee$2$0(action) {
-	      var validationErrors, _callAPI, _requestType, callAPI, endpoint, headers, method, body, credentials, bailout, types, _normalizeTypeDescriptors, requestType, successType, failureType, res;
+	      var validationErrors, _callAPI, _requestType, callAPI, endpoint, headers, method, body, credentials, bailout, types, redirect, _normalizeTypeDescriptors, requestType, successType, failureType, res;
 	
 	      return _regeneratorRuntime.async(function callee$2$0$(context$3$0) {
 	        while (1) switch (context$3$0.prev = context$3$0.next) {
@@ -29287,143 +29244,144 @@ module.exports =
 	            credentials = callAPI.credentials;
 	            bailout = callAPI.bailout;
 	            types = callAPI.types;
+	            redirect = callAPI.redirect;
 	            _normalizeTypeDescriptors = _util.normalizeTypeDescriptors(types);
 	            requestType = _normalizeTypeDescriptors[0];
 	            successType = _normalizeTypeDescriptors[1];
 	            failureType = _normalizeTypeDescriptors[2];
-	            context$3$0.prev = 19;
+	            context$3$0.prev = 20;
 	
 	            if (!(typeof bailout === 'boolean' && bailout || typeof bailout === 'function' && bailout(getState()))) {
-	              context$3$0.next = 22;
+	              context$3$0.next = 23;
 	              break;
 	            }
 	
 	            return context$3$0.abrupt('return');
 	
-	          case 22:
-	            context$3$0.next = 30;
+	          case 23:
+	            context$3$0.next = 31;
 	            break;
 	
-	          case 24:
-	            context$3$0.prev = 24;
-	            context$3$0.t0 = context$3$0['catch'](19);
-	            context$3$0.next = 28;
+	          case 25:
+	            context$3$0.prev = 25;
+	            context$3$0.t0 = context$3$0['catch'](20);
+	            context$3$0.next = 29;
 	            return _regeneratorRuntime.awrap(_util.actionWith(_extends({}, requestType, {
 	              payload: new _errors.RequestError('[CALL_API].bailout function failed'),
 	              error: true
 	            }), [action, getState()]));
 	
-	          case 28:
+	          case 29:
 	            context$3$0.t1 = context$3$0.sent;
 	            return context$3$0.abrupt('return', next(context$3$0.t1));
 	
-	          case 30:
+	          case 31:
 	            if (!(typeof endpoint === 'function')) {
-	              context$3$0.next = 41;
+	              context$3$0.next = 42;
 	              break;
 	            }
 	
-	            context$3$0.prev = 31;
+	            context$3$0.prev = 32;
 	
 	            endpoint = endpoint(getState());
-	            context$3$0.next = 41;
+	            context$3$0.next = 42;
 	            break;
 	
-	          case 35:
-	            context$3$0.prev = 35;
-	            context$3$0.t2 = context$3$0['catch'](31);
-	            context$3$0.next = 39;
+	          case 36:
+	            context$3$0.prev = 36;
+	            context$3$0.t2 = context$3$0['catch'](32);
+	            context$3$0.next = 40;
 	            return _regeneratorRuntime.awrap(_util.actionWith(_extends({}, requestType, {
 	              payload: new _errors.RequestError('[CALL_API].endpoint function failed'),
 	              error: true
 	            }), [action, getState()]));
 	
-	          case 39:
+	          case 40:
 	            context$3$0.t3 = context$3$0.sent;
 	            return context$3$0.abrupt('return', next(context$3$0.t3));
 	
-	          case 41:
+	          case 42:
 	            if (!(typeof headers === 'function')) {
-	              context$3$0.next = 52;
+	              context$3$0.next = 53;
 	              break;
 	            }
 	
-	            context$3$0.prev = 42;
+	            context$3$0.prev = 43;
 	
 	            headers = headers(getState());
-	            context$3$0.next = 52;
+	            context$3$0.next = 53;
 	            break;
 	
-	          case 46:
-	            context$3$0.prev = 46;
-	            context$3$0.t4 = context$3$0['catch'](42);
-	            context$3$0.next = 50;
+	          case 47:
+	            context$3$0.prev = 47;
+	            context$3$0.t4 = context$3$0['catch'](43);
+	            context$3$0.next = 51;
 	            return _regeneratorRuntime.awrap(_util.actionWith(_extends({}, requestType, {
 	              payload: new _errors.RequestError('[CALL_API].headers function failed'),
 	              error: true
 	            }), [action, getState()]));
 	
-	          case 50:
+	          case 51:
 	            context$3$0.t5 = context$3$0.sent;
 	            return context$3$0.abrupt('return', next(context$3$0.t5));
 	
-	          case 52:
-	            context$3$0.next = 54;
+	          case 53:
+	            context$3$0.next = 55;
 	            return _regeneratorRuntime.awrap(_util.actionWith(requestType, [action, getState()]));
 	
-	          case 54:
+	          case 55:
 	            context$3$0.t6 = context$3$0.sent;
 	            next(context$3$0.t6);
-	            context$3$0.prev = 56;
-	            context$3$0.next = 59;
-	            return _regeneratorRuntime.awrap(_isomorphicFetch2['default'](endpoint, { method: method, body: body, credentials: credentials, headers: headers }));
+	            context$3$0.prev = 57;
+	            context$3$0.next = 60;
+	            return _regeneratorRuntime.awrap(_isomorphicFetch2['default'](endpoint, { method: method, body: body, credentials: credentials, headers: headers, redirect: redirect }));
 	
-	          case 59:
+	          case 60:
 	            res = context$3$0.sent;
-	            context$3$0.next = 68;
+	            context$3$0.next = 69;
 	            break;
 	
-	          case 62:
-	            context$3$0.prev = 62;
-	            context$3$0.t7 = context$3$0['catch'](56);
-	            context$3$0.next = 66;
+	          case 63:
+	            context$3$0.prev = 63;
+	            context$3$0.t7 = context$3$0['catch'](57);
+	            context$3$0.next = 67;
 	            return _regeneratorRuntime.awrap(_util.actionWith(_extends({}, requestType, {
 	              payload: new _errors.RequestError(context$3$0.t7.message),
 	              error: true
 	            }), [action, getState()]));
 	
-	          case 66:
+	          case 67:
 	            context$3$0.t8 = context$3$0.sent;
 	            return context$3$0.abrupt('return', next(context$3$0.t8));
 	
-	          case 68:
+	          case 69:
 	            if (!res.ok) {
-	              context$3$0.next = 75;
+	              context$3$0.next = 76;
 	              break;
 	            }
 	
-	            context$3$0.next = 71;
+	            context$3$0.next = 72;
 	            return _regeneratorRuntime.awrap(_util.actionWith(successType, [action, getState(), res]));
 	
-	          case 71:
+	          case 72:
 	            context$3$0.t9 = context$3$0.sent;
 	            return context$3$0.abrupt('return', next(context$3$0.t9));
 	
-	          case 75:
-	            context$3$0.next = 77;
+	          case 76:
+	            context$3$0.next = 78;
 	            return _regeneratorRuntime.awrap(_util.actionWith(_extends({}, failureType, {
 	              error: true
 	            }), [action, getState(), res]));
 	
-	          case 77:
+	          case 78:
 	            context$3$0.t10 = context$3$0.sent;
 	            return context$3$0.abrupt('return', next(context$3$0.t10));
 	
-	          case 79:
+	          case 80:
 	          case 'end':
 	            return context$3$0.stop();
 	        }
-	      }, null, _this, [[19, 24], [31, 35], [42, 46], [56, 62]]);
+	      }, null, _this, [[20, 25], [32, 36], [43, 47], [57, 63]]);
 	    };
 	  };
 	}
@@ -29473,6 +29431,21 @@ module.exports =
 	    return
 	  }
 	
+	  var support = {
+	    searchParams: 'URLSearchParams' in self,
+	    iterable: 'Symbol' in self && 'iterator' in Symbol,
+	    blob: 'FileReader' in self && 'Blob' in self && (function() {
+	      try {
+	        new Blob()
+	        return true
+	      } catch(e) {
+	        return false
+	      }
+	    })(),
+	    formData: 'FormData' in self,
+	    arrayBuffer: 'ArrayBuffer' in self
+	  }
+	
 	  function normalizeName(name) {
 	    if (typeof name !== 'string') {
 	      name = String(name)
@@ -29488,6 +29461,24 @@ module.exports =
 	      value = String(value)
 	    }
 	    return value
+	  }
+	
+	  // Build a destructive iterator for the value list
+	  function iteratorFor(items) {
+	    var iterator = {
+	      next: function() {
+	        var value = items.shift()
+	        return {done: value === undefined, value: value}
+	      }
+	    }
+	
+	    if (support.iterable) {
+	      iterator[Symbol.iterator] = function() {
+	        return iterator
+	      }
+	    }
+	
+	    return iterator
 	  }
 	
 	  function Headers(headers) {
@@ -29545,6 +29536,28 @@ module.exports =
 	    }, this)
 	  }
 	
+	  Headers.prototype.keys = function() {
+	    var items = []
+	    this.forEach(function(value, name) { items.push(name) })
+	    return iteratorFor(items)
+	  }
+	
+	  Headers.prototype.values = function() {
+	    var items = []
+	    this.forEach(function(value) { items.push(value) })
+	    return iteratorFor(items)
+	  }
+	
+	  Headers.prototype.entries = function() {
+	    var items = []
+	    this.forEach(function(value, name) { items.push([name, value]) })
+	    return iteratorFor(items)
+	  }
+	
+	  if (support.iterable) {
+	    Headers.prototype[Symbol.iterator] = Headers.prototype.entries
+	  }
+	
 	  function consumed(body) {
 	    if (body.bodyUsed) {
 	      return Promise.reject(new TypeError('Already read'))
@@ -29575,22 +29588,8 @@ module.exports =
 	    return fileReaderReady(reader)
 	  }
 	
-	  var support = {
-	    blob: 'FileReader' in self && 'Blob' in self && (function() {
-	      try {
-	        new Blob();
-	        return true
-	      } catch(e) {
-	        return false
-	      }
-	    })(),
-	    formData: 'FormData' in self,
-	    arrayBuffer: 'ArrayBuffer' in self
-	  }
-	
 	  function Body() {
 	    this.bodyUsed = false
-	
 	
 	    this._initBody = function(body) {
 	      this._bodyInit = body
@@ -29600,6 +29599,8 @@ module.exports =
 	        this._bodyBlob = body
 	      } else if (support.formData && FormData.prototype.isPrototypeOf(body)) {
 	        this._bodyFormData = body
+	      } else if (support.searchParams && URLSearchParams.prototype.isPrototypeOf(body)) {
+	        this._bodyText = body.toString()
 	      } else if (!body) {
 	        this._bodyText = ''
 	      } else if (support.arrayBuffer && ArrayBuffer.prototype.isPrototypeOf(body)) {
@@ -29614,6 +29615,8 @@ module.exports =
 	          this.headers.set('content-type', 'text/plain;charset=UTF-8')
 	        } else if (this._bodyBlob && this._bodyBlob.type) {
 	          this.headers.set('content-type', this._bodyBlob.type)
+	        } else if (support.searchParams && URLSearchParams.prototype.isPrototypeOf(body)) {
+	          this.headers.set('content-type', 'application/x-www-form-urlencoded;charset=UTF-8')
 	        }
 	      }
 	    }
@@ -29735,7 +29738,7 @@ module.exports =
 	
 	  function headers(xhr) {
 	    var head = new Headers()
-	    var pairs = xhr.getAllResponseHeaders().trim().split('\n')
+	    var pairs = (xhr.getAllResponseHeaders() || '').trim().split('\n')
 	    pairs.forEach(function(header) {
 	      var split = header.trim().split(':')
 	      var key = split.shift().trim()
@@ -29788,9 +29791,9 @@ module.exports =
 	    return new Response(null, {status: status, headers: {location: url}})
 	  }
 	
-	  self.Headers = Headers;
-	  self.Request = Request;
-	  self.Response = Response;
+	  self.Headers = Headers
+	  self.Request = Request
+	  self.Response = Response
 	
 	  self.fetch = function(input, init) {
 	    return new Promise(function(resolve, reject) {
@@ -29813,26 +29816,25 @@ module.exports =
 	          return xhr.getResponseHeader('X-Request-URL')
 	        }
 	
-	        return;
+	        return
 	      }
 	
 	      xhr.onload = function() {
-	        var status = (xhr.status === 1223) ? 204 : xhr.status
-	        if (status < 100 || status > 599) {
-	          reject(new TypeError('Network request failed'))
-	          return
-	        }
 	        var options = {
-	          status: status,
+	          status: xhr.status,
 	          statusText: xhr.statusText,
 	          headers: headers(xhr),
 	          url: responseURL()
 	        }
-	        var body = 'response' in xhr ? xhr.response : xhr.responseText;
+	        var body = 'response' in xhr ? xhr.response : xhr.responseText
 	        resolve(new Response(body, options))
 	      }
 	
 	      xhr.onerror = function() {
+	        reject(new TypeError('Network request failed'))
+	      }
+	
+	      xhr.ontimeout = function() {
 	        reject(new TypeError('Network request failed'))
 	      }
 	
@@ -29921,13 +29923,9 @@ module.exports =
 
 	'use strict';
 	
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
+	exports.__esModule = true;
 	
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-	
-	var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 	
 	exports.default = connect;
 	
@@ -29938,8 +29936,6 @@ module.exports =
 	var _actions = __webpack_require__(141);
 	
 	var _helpers = __webpack_require__(2);
-	
-	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 	
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 	
@@ -29983,55 +29979,53 @@ module.exports =
 	      function TptConnect() {
 	        _classCallCheck(this, TptConnect);
 	
-	        return _possibleConstructorReturn(this, Object.getPrototypeOf(TptConnect).apply(this, arguments));
+	        return _possibleConstructorReturn(this, _ReduxConnect.apply(this, arguments));
 	      }
 	
-	      _createClass(TptConnect, [{
-	        key: 'loadResources',
-	        value: function loadResources() {
-	          var _this2 = this;
+	      TptConnect.prototype.loadResources = function loadResources() {
+	        var _this2 = this;
 	
-	          var resources = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
-	          var props = this.renderedElement.props;
+	        var resources = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+	        var props = this.renderedElement.props;
 	
-	          Object.keys(resources).forEach(function (key) {
-	            var resource = resources[key];
-	            if (resource.auto && !(0, _helpers.findInState)(_this2.store.getState(), resource)) {
-	              props.prepopulateResource(resource);
-	              props.fetchResource(resource);
-	            }
-	          });
-	        }
-	      }, {
-	        key: 'componentDidMount',
-	        value: function componentDidMount() {
-	          _get(Object.getPrototypeOf(TptConnect.prototype), 'componentDidMount', this).call(this);
-	          this.loadResources(this.allResources);
-	          this._oldResources = Object.assign({}, this.allResources);
-	        }
-	      }, {
-	        key: 'componentWillReceiveProps',
-	        value: function componentWillReceiveProps() {
-	          var _get2;
-	
-	          for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-	            args[_key] = arguments[_key];
+	        Object.keys(resources).forEach(function (key) {
+	          var resource = resources[key];
+	          if (resource.auto && !(0, _helpers.findInState)(_this2.store.getState(), resource)) {
+	            props.prepopulateResource(resource);
+	            props.fetchResource(resource);
 	          }
+	        });
+	      };
 	
-	          (_get2 = _get(Object.getPrototypeOf(TptConnect.prototype), 'componentWillReceiveProps', this)).call.apply(_get2, [this].concat(args));
-	          this._oldResources = Object.assign({}, this.allResources);
-	        }
-	      }, {
-	        key: 'componentDidUpdate',
-	        value: function componentDidUpdate() {
-	          var _this3 = this;
+	      TptConnect.prototype.componentDidMount = function componentDidMount() {
+	        _ReduxConnect.prototype.componentDidMount.call(this);
+	        this.loadResources(this.allResources);
+	        this._oldResources = Object.assign({}, this.allResources);
+	      };
 	
-	          this._oldResources || (this._oldResources = this.allResources);
-	          this.loadResources(Object.keys(this.allResources).reduce(function (changedResources, key) {
-	            return (0, _lodash.isEqual)(_this3._oldResources[key], _this3.allResources[key]) ? changedResources : Object.assign({}, changedResources, _defineProperty({}, key, _this3.allResources[key]));
-	          }, {}));
+	      TptConnect.prototype.componentWillReceiveProps = function componentWillReceiveProps() {
+	        var _ReduxConnect$prototy;
+	
+	        for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+	          args[_key] = arguments[_key];
 	        }
-	      }, {
+	
+	        (_ReduxConnect$prototy = _ReduxConnect.prototype.componentWillReceiveProps).call.apply(_ReduxConnect$prototy, [this].concat(args));
+	        this._oldResources = Object.assign({}, this.allResources);
+	      };
+	
+	      TptConnect.prototype.componentDidUpdate = function componentDidUpdate() {
+	        var _this3 = this;
+	
+	        this._oldResources || (this._oldResources = this.allResources);
+	        this.loadResources(Object.keys(this.allResources).reduce(function (changedResources, key) {
+	          var _Object$assign;
+	
+	          return (0, _lodash.isEqual)(_this3._oldResources[key], _this3.allResources[key]) ? changedResources : Object.assign({}, changedResources, (_Object$assign = {}, _Object$assign[key] = _this3.allResources[key], _Object$assign));
+	        }, {}));
+	      };
+	
+	      _createClass(TptConnect, [{
 	        key: 'allResources',
 	        get: function get() {
 	          return this.renderedElement.props.resources || {};
@@ -30881,7 +30875,10 @@ module.exports =
 	      objectToString.call(value) != objectTag || isHostObject(value)) {
 	    return false;
 	  }
-	  var proto = getPrototypeOf(value);
+	  var proto = objectProto;
+	  if (typeof value.constructor == 'function') {
+	    proto = getPrototypeOf(value);
+	  }
 	  if (proto === null) {
 	    return true;
 	  }
@@ -31259,11 +31256,7 @@ module.exports =
 
 	'use strict';
 	
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	exports.__esModule = true;
 	
 	var _react = __webpack_require__(237);
 	
@@ -31289,7 +31282,7 @@ module.exports =
 	  function Provider(props) {
 	    _classCallCheck(this, Provider);
 	
-	    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(Provider).call(this, props));
+	    var _this = _possibleConstructorReturn(this, _Component.call(this, props));
 	
 	    _this.state = {
 	      store: props.store || (0, _redux.createStore)((0, _redux.combineReducers)({ connect: _reducers2.default }), (0, _redux.applyMiddleware)(_reduxApiMiddleware.apiMiddleware))
@@ -31297,19 +31290,15 @@ module.exports =
 	    return _this;
 	  }
 	
-	  _createClass(Provider, [{
-	    key: 'getChildContext',
-	    value: function getChildContext() {
-	      return {
-	        store: this.state.store
-	      };
-	    }
-	  }, {
-	    key: 'render',
-	    value: function render() {
-	      return this.props.children;
-	    }
-	  }]);
+	  Provider.prototype.getChildContext = function getChildContext() {
+	    return {
+	      store: this.state.store
+	    };
+	  };
+	
+	  Provider.prototype.render = function render() {
+	    return this.props.children;
+	  };
 	
 	  return Provider;
 	}(_react.Component);
@@ -31326,9 +31315,7 @@ module.exports =
 
 	'use strict';
 	
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
+	exports.__esModule = true;
 	exports.default = connectReducer;
 	
 	var _lodash = __webpack_require__(17);
