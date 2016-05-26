@@ -87,13 +87,13 @@ export const logger = (function () {
   const info = debug(`${namespace}:info`);
   error.log = (...args) => (
     console.error
-      ? console.error(...args)
-      : console.log(...args)
+      ? Function.apply.call(console.error, console, args)
+      : Function.apply.call(console.log, console, args)
   );
   info.log = (...args) => (
     console.info
-      ? console.info(...args)
-      : console.log(...args)
+      ? Function.apply.call(console.info, console, args)
+      : Function.apply.call(console.log, console, args)
   );
   return { error, info };
 }());
