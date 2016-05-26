@@ -85,8 +85,16 @@ export const logger = (function () {
   const namespace = 'tptconnect';
   const error = debug(`${namespace}:error`);
   const info = debug(`${namespace}:info`);
-  error.log = (console.error || console.log).bind(console);
-  info.log = (console.info || console.log).bind(console);
+  error.log = (...args) => (
+    console.error
+      ? console.error(...args)
+      : console.log(...args)
+  );
+  info.log = (...args) => (
+    console.info
+      ? console.info(...args)
+      : console.log(...args)
+  );
   return { error, info };
 }());
 
