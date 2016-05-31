@@ -6,13 +6,7 @@ module.exports = {
   module: {
     loaders: [
       { test: /\.jsx?$/, loader: 'babel', exclude: /(node_modules|bower_components)/ },
-      { test: /\.jsx?$/, loader: 'isparta', include: path.join(__dirname, 'src') },
-      { test: /\.jsx?$/, loader: 'eslint', include: path.join(__dirname, 'src') },
-      {
-        test: /\.jsx?$/,
-        loader: 'eslint',
-        include: path.join(__dirname, '__tests__')
-      }
+      { test: /\.jsx?$/, loader: 'isparta', include: path.join(__dirname, 'src') }
     ]
   }
 };
