@@ -39,18 +39,23 @@ function onResponse(resourceDefinition, meta, opts) {
       lastUpdated: Date.now()
     }, meta);
 
-    const contentType = response.headers.get('content-type');
-    if (response.ok && contentType && ~contentType.indexOf('application/json')) {
-      return response.json().then((json) => {
-        logger.info('Fetched resource successfully:', resourceDefinition);
-        opts.onSuccess && opts.onSuccess(response, json);
-        return computePayload(resourceDefinition, { ...meta, response }, json);
-      });
-    }
-    logger.info('Failed to fetch resource:', resourceDefinition);
-    opts.onError && opts.onError(response);
-    meta = merge({}, meta, { isSuccess: false, isError: true });
-    return computePayload(resourceDefinition, { ...meta, response });
+    return response.json().then((json) => {
+      if (!response.ok) { throw new Error(JSON.stringify(json)); }
+      logger.info('Fetched resource successfully:', resourceDefinition);
+      opts.onSuccess && opts.onSuccess(json, response);
+      return computePayload(resourceDefinition, { ...meta, response }, json);
+    }).catch((err) => {
+      logger.error('Failed to fetch resource:', resourceDefinition, err);
+      opts.onError && opts.onError(err, response);
+      meta = merge({}, meta, { isSuccess: false, isError: true });
+
+      let json;
+      try {
+        json = JSON.parse(err.message);
+      } catch (e) {}
+
+      return computePayload(resourceDefinition, { ...meta, response }, json);
+    });
   };
 }
 

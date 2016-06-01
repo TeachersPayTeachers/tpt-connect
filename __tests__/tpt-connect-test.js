@@ -373,7 +373,7 @@ describe('tpt-connect', () => {
     });
 
     it('executes functions passed in directly to dispatchRequest AND global funcs', (done) => {
-      domElement._props.dispatchRequest({ ...resourceDefinition, ...{ method: 'GET' } }, { onSuccess: spyFunc });
+      domElement._props.dispatchRequest({ ...resourceDefinition, ...{ method: 'GET' } }).then(spyFunc);
       defer(() => {
         expect(spyFunc.calls.count()).toEqual(3);
         done();

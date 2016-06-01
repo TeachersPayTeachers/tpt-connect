@@ -89,14 +89,21 @@ export default function connect(mapStateToProps, mapDispatchToProps = {}, mergeP
         const { onSuccess, onError } = this.context.options || {};
         const renderedElement = super.render();
         const { props } = renderedElement;
+
+        // creating custom dispatchRequest so we can force usage of global opts
+        // and promisify the return value
+        const _dispatchRequest = (definition) => {
+          return new Promise((resolve, reject) => {
+            props.dispatchRequest(definition, {
+              onSuccess: extendFunction(onSuccess, resolve),
+              onError: extendFunction(onError, reject)
+            });
+          });
+        };
+
         this.renderedElement = cloneElement(renderedElement, {
           ...props,
-          // creating custom one so we can force usage of global opts
-          dispatchRequest: (definition, opts = {}) => {
-            opts.onSuccess = extendFunction(onSuccess, opts.onSuccess);
-            opts.onError = extendFunction(onError, opts.onError);
-            return props.dispatchRequest(definition, opts);
-          }
+          dispatchRequest: _dispatchRequest
         });
         return this.renderedElement;
       }
