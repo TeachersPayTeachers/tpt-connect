@@ -5,6 +5,7 @@
     "react"
   ],
   "plugins": [
+    "lodash",
     "add-module-exports",
     "transform-proto-to-assign"
   ]

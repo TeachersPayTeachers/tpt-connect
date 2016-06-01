@@ -8,7 +8,6 @@ module.exports = {
     library: 'tpt-connect',
     libraryTarget: 'commonjs2'
   },
-  devtool: 'source-map',
   module: {
     loaders: [
       { test: /\.jsx?$/, loader: 'babel', exclude: /node_modules/ }
@@ -17,4 +16,4 @@ module.exports = {
   externals: {
     react: 'react'
   }
-}
+};

@@ -1,7 +1,5 @@
 const path = require('path');
 const webpack = require('webpack');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const ComponentResolverPlugin = require('component-resolver-webpack');
 
 const common = require('./webpack.common.config');
@@ -25,11 +23,7 @@ module.exports = {
   },
   module: {
     loaders: [
-      { test: /\.css$/, loader: ExtractTextPlugin.extract('css?sourceMap') },
-      { test: /\.scss$/, loader: ExtractTextPlugin.extract('css?sourceMap!sass?sourceMap') },
-      { test: /\.jsx?$/, loader: 'babel', include: /src/, exclude: /node_modules/ },
-      { test: /\.(ttf|eot|svg|woff|woff2)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'file' },
-      { test: /\.(png|jpg)$/, loader: 'url?limit=8192' }
+      { test: /\.jsx?$/, loader: 'babel', include: /src/, exclude: /node_modules/ }
     ]
   },
   resolve: {
@@ -40,11 +34,6 @@ module.exports = {
       CONFIG: JSON.stringify(config),
       META: JSON.stringify(meta)
     }),
-    new HtmlWebpackPlugin({
-      template: 'index.html',
-      inject: true
-    }),
-    new ExtractTextPlugin('style.css', { allChunks: true }),
     new webpack.ResolverPlugin([
       new ComponentResolverPlugin()
     ])
