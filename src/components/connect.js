@@ -48,6 +48,15 @@ export default function connect(mapStateToProps, mapDispatchToProps = {}, mergeP
         options: PropTypes.object
       };
 
+      // used to keep track of all components' outstanding fetches when
+      // rendering on server. TODO: find a better solution
+      static _fetchPromises = [];
+
+      constructor(...args) {
+        super(...args);
+        this._isFirstRender = true;
+      }
+
       loadResources(resources = {}) {
         const { props } = this.renderedElement;
         Object.keys(resources).forEach((key) => {
@@ -57,12 +66,6 @@ export default function connect(mapStateToProps, mapDispatchToProps = {}, mergeP
             props.dispatchRequest(resource);
           }
         });
-      }
-
-      componentDidMount() {
-        super.componentDidMount();
-        this.loadResources(this.allResources);
-        this._oldResources = { ...this.allResources };
       }
 
       componentWillReceiveProps(...args) {
@@ -93,18 +96,30 @@ export default function connect(mapStateToProps, mapDispatchToProps = {}, mergeP
         // creating custom dispatchRequest so we can force usage of global opts
         // and promisify the return value
         const _dispatchRequest = (definition) => {
-          return new Promise((resolve, reject) => {
+          const promise = new Promise((resolve, reject) => {
             props.dispatchRequest(definition, {
               onSuccess: extendFunction(onSuccess, resolve),
               onError: extendFunction(onError, reject)
             });
           });
+
+          TptConnect._fetchPromises.push(promise);
+
+          return promise;
         };
 
         this.renderedElement = cloneElement(renderedElement, {
           ...props,
           dispatchRequest: _dispatchRequest
         });
+
+        // componentDidMount isnt getting called on server render
+        if (this._isFirstRender) {
+          this.loadResources(this.allResources);
+          this._oldResources = { ...this.allResources };
+          this._isFirstRender = false;
+        }
+
         return this.renderedElement;
       }
     };
