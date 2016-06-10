@@ -48,10 +48,6 @@ export default function connect(mapStateToProps, mapDispatchToProps = {}, mergeP
         options: PropTypes.object
       };
 
-      // used to keep track of all components' outstanding fetches when
-      // rendering on server. TODO: find a better solution
-      static _fetchPromises = [];
-
       constructor(...args) {
         super(...args);
         this._isFirstRender = true;
@@ -89,7 +85,7 @@ export default function connect(mapStateToProps, mapDispatchToProps = {}, mergeP
       }
 
       render() {
-        const { onSuccess, onError } = this.context.options || {};
+        const { onSuccess, onError, onRequest } = this.context.options || {};
         const renderedElement = super.render();
         const { props } = renderedElement;
 
@@ -103,7 +99,7 @@ export default function connect(mapStateToProps, mapDispatchToProps = {}, mergeP
             });
           });
 
-          TptConnect._fetchPromises.push(promise);
+          onRequest && onRequest(promise);
 
           return promise;
         };
