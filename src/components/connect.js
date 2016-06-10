@@ -69,6 +69,12 @@ export default function connect(mapStateToProps, mapDispatchToProps = {}, mergeP
         this._oldResources = { ...this.allResources };
       }
 
+      componentDidMount() {
+        super.componentDidMount();
+        this.loadResources(this.allResources);
+        this._oldResources = { ...this.allResources };
+      }
+
       componentDidUpdate() {
         this._oldResources || (this._oldResources = this.allResources);
         this.loadResources(
@@ -85,7 +91,7 @@ export default function connect(mapStateToProps, mapDispatchToProps = {}, mergeP
       }
 
       render() {
-        const { onSuccess, onError, onRequest } = this.context.options || {};
+        const { onSuccess, onError, onRequest, isServer } = this.context.options || {};
         const renderedElement = super.render();
         const { props } = renderedElement;
 
@@ -109,8 +115,9 @@ export default function connect(mapStateToProps, mapDispatchToProps = {}, mergeP
           dispatchRequest: _dispatchRequest
         });
 
-        // componentDidMount isnt getting called on server render
-        if (this._isFirstRender) {
+        // componentDidMount isnt getting called on server render so needs to be
+        // triggered once here
+        if (isServer && this._isFirstRender) {
           this.loadResources(this.allResources);
           this._oldResources = { ...this.allResources };
           this._isFirstRender = false;
