@@ -42,11 +42,15 @@ function onResponse(resourceDefinition, meta, opts) {
     return response.json().then((json) => {
       if (!response.ok) { throw new Error(JSON.stringify(json)); }
       logger.info('Fetched resource successfully:', resourceDefinition);
-      opts.onSuccess && opts.onSuccess(json, response);
+      opts.onSuccess && setTimeout(() => {
+        opts.onSuccess({ json, response });
+      });
       return computePayload(resourceDefinition, { ...meta, response }, json);
     }).catch((err) => {
       logger.error('Failed to fetch resource:', resourceDefinition, err);
-      opts.onError && opts.onError(err, response);
+      opts.onError && setTimeout(() => {
+        opts.onError({ error: err, response });
+      });
       meta = merge({}, meta, { isSuccess: false, isError: true });
 
       let json;

@@ -1,8 +1,8 @@
 {
   "name": "@teachers/tpt-connect",
-  "version": "0.0.31",
+  "version": "0.0.38",
   "description": "TpT-Connect is an extension to [Redux](https://github.com/reactjs/redux) which creates a simple interface for components' data fetching.",
-  "main": "src",
+  "main": "lib",
   "engines": {
     "node": ">=4.x.x",
     "npm": ">=3.x.x"
@@ -12,10 +12,10 @@
     "test": "karma start",
     "test-jenkins": "mkdir logs; karma start --single-run=true",
     "lint": "eslint src",
-    "build": "webpack",
+    "build": "babel src -d lib",
     "build:min": "NODE_ENV=production webpack -p --output-filename tpt-connect.min.js",
     "coverage-report": "open `pwd`/coverage/lcov-report/index.html",
-    "prepublish": "npm run build && npm run build:min"
+    "prepublish": "rm -rf lib && npm run build"
   },
   "devDependencies": {
     "babel-core": "6.4.5",
@@ -69,7 +69,7 @@
     "react-router": "2.0.0",
     "react-router-redux": "3.0.0",
     "redux": "3.3.1",
-    "redux-api-middleware": "git://github.com/Peleg/redux-api-middleware.git#64df6d400a52becf0d384e4dc052e4a55bb6aae0"
+    "redux-api-middleware": "git://github.com/Peleg/redux-api-middleware.git#8eb5e5adee0ba4e7aa6d1008856d62bc539e89cd"
   },
   "repository": {
     "type": "git",

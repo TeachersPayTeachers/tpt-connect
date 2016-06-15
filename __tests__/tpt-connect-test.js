@@ -63,7 +63,7 @@ describe('tpt-connect', () => {
   beforeEach(() => {
     store = createStore(
       combineReducers({ connect: connectReducer }),
-      applyMiddleware(connectMiddleware)
+      applyMiddleware(connectMiddleware({}))
     );
     window.fetch.calls.reset();
     window.fetch.and.callFake(() => {
@@ -111,7 +111,7 @@ describe('tpt-connect', () => {
     const spyReducer = jasmine.createSpy().and.callFake((state = {}) => (state));
     store = createStore(
       combineReducers({ reducer: spyReducer, connect: connectReducer }),
-      applyMiddleware(connectMiddleware)
+      applyMiddleware(connectMiddleware({}))
     );
     renderComponent();
     defer(() => {
@@ -271,7 +271,7 @@ describe('tpt-connect', () => {
               ? { ...action, ...state }
               : state;
           } }),
-          applyMiddleware(connectMiddleware)
+          applyMiddleware(connectMiddleware({}))
         );
 
         renderComponent(mapFunc);

@@ -48,6 +48,11 @@ export default function connect(mapStateToProps, mapDispatchToProps = {}, mergeP
         options: PropTypes.object
       };
 
+      constructor(...args) {
+        super(...args);
+        this._isFirstRender = true;
+      }
+
       loadResources(resources = {}) {
         const { props } = this.renderedElement;
         Object.keys(resources).forEach((key) => {
@@ -59,14 +64,14 @@ export default function connect(mapStateToProps, mapDispatchToProps = {}, mergeP
         });
       }
 
-      componentDidMount() {
-        super.componentDidMount();
-        this.loadResources(this.allResources);
+      componentWillReceiveProps(...args) {
+        super.componentWillReceiveProps(...args);
         this._oldResources = { ...this.allResources };
       }
 
-      componentWillReceiveProps(...args) {
-        super.componentWillReceiveProps(...args);
+      componentDidMount() {
+        super.componentDidMount();
+        this.loadResources(this.allResources);
         this._oldResources = { ...this.allResources };
       }
 
@@ -86,25 +91,38 @@ export default function connect(mapStateToProps, mapDispatchToProps = {}, mergeP
       }
 
       render() {
-        const { onSuccess, onError } = this.context.options || {};
+        const { onSuccess, onError, onRequest, isServer } = this.context.options || {};
         const renderedElement = super.render();
         const { props } = renderedElement;
 
         // creating custom dispatchRequest so we can force usage of global opts
         // and promisify the return value
         const _dispatchRequest = (definition) => {
-          return new Promise((resolve, reject) => {
+          const promise = new Promise((resolve, reject) => {
             props.dispatchRequest(definition, {
               onSuccess: extendFunction(onSuccess, resolve),
               onError: extendFunction(onError, reject)
             });
           });
+
+          onRequest && onRequest(promise);
+
+          return promise;
         };
 
         this.renderedElement = cloneElement(renderedElement, {
           ...props,
           dispatchRequest: _dispatchRequest
         });
+
+        // componentDidMount isnt getting called on server render so needs to be
+        // triggered once here
+        if (isServer && this._isFirstRender) {
+          this.loadResources(this.allResources);
+          this._oldResources = { ...this.allResources };
+          this._isFirstRender = false;
+        }
+
         return this.renderedElement;
       }
     };
