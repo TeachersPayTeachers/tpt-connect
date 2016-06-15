@@ -62,6 +62,7 @@ export default function connect(mapStateToProps, mapDispatchToProps = {}, mergeP
             props.dispatchRequest(resource);
           }
         });
+        this._oldResources = { ...this.allResources };
       }
 
       componentWillReceiveProps(...args) {
@@ -72,22 +73,31 @@ export default function connect(mapStateToProps, mapDispatchToProps = {}, mergeP
       componentDidMount() {
         super.componentDidMount();
         this.loadResources(this.allResources);
-        this._oldResources = { ...this.allResources };
       }
 
       componentDidUpdate() {
+        this.loadResources(this.changedResources);
+      }
+
+      get changedResources() {
         this._oldResources || (this._oldResources = this.allResources);
-        this.loadResources(
-          Object.keys(this.allResources).reduce((changedResources, key) => {
-            return isEqual(this._oldResources[key], this.allResources[key])
-              ? changedResources
-              : { ...changedResources, [key]: this.allResources[key] };
-          }, {})
-        );
+        return Object.keys(this.allResources).reduce((changedResources, key) => {
+          return isEqual(this._oldResources[key], this.allResources[key])
+            ? changedResources
+            : { ...changedResources, [key]: this.allResources[key] };
+        }, {});
       }
 
       get allResources() {
         return this.renderedElement.props.resources || {};
+      }
+
+      get serverResources() {
+        return Object.keys(this.allResources).reduce((serverResources, key) => {
+          return this.allResources[key].clientOnly
+            ? serverResources
+            : { ...serverResources, [key]: this.allResources[key] };
+        }, {});
       }
 
       render() {
@@ -118,8 +128,7 @@ export default function connect(mapStateToProps, mapDispatchToProps = {}, mergeP
         // componentDidMount isnt getting called on server render so needs to be
         // triggered once here
         if (isServer && this._isFirstRender) {
-          this.loadResources(this.allResources);
-          this._oldResources = { ...this.allResources };
+          this.loadResources(this.serverResources); // only load non client-only resources
           this._isFirstRender = false;
         }
 

@@ -139,6 +139,10 @@ These are the options each resource definition takes:
   inherits from. This is useful to centralize resource definitions to be
   used across multiple components.
 
+- `clientOnly` (`Boolean`, options, defaults to `false`) - will prevent
+  resources from being fetched when rendered on the server (when `isServer` is
+  set to `true` on `ConnectProvider`).
+
 - `normalize` (`Function`, optional, defaults to
   [normalizr](https://github.com/gaearon/normalizr#normalizeobj-schema-options)'s
   `normalize`) - a function used to normalize the JSON returned from the
