@@ -101,9 +101,9 @@ export default function connect(mapStateToProps, mapDispatchToProps = {}, mergeP
       }
 
       render() {
-        const { onSuccess, onError, onRequest, isServer } = this.context.options || {};
         const renderedElement = super.render();
         const { props } = renderedElement;
+        const { onSuccess, onError, onRequest, isServer } = { ...props, ...this.context.options };
 
         // creating custom dispatchRequest so we can force usage of global opts
         // and promisify the return value

@@ -116,7 +116,14 @@ export function normalizeResourceDefinition(resource) {
   resource.url = fullUrl(resource.url, resource.params);
   resource.method = resource.method.toUpperCase();
   resource.isArray = !resource.schema.getKey;
-  resource.defaultValue = resource.isArray ? [] : {};
+  if (resource.defaultValue === undefined) {
+    resource.defaultValue = resource.isArray
+      ? []
+      : {};
+  } else {
+    // making sure we dont end up with a primitive so we can add _meta below
+    resource.defaultValue = Object(resource.defaultValue);
+  }
   resource.defaultValue._meta = {};
   resource.requestKey = requestKey(resource);
 
