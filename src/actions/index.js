@@ -16,7 +16,7 @@ export function computePayload(resourceDefinition, meta, data) {
     : {};
 
   // if data is not indexable just wrap it in array and store directly under paramsToResources
-  data = result.length === 0 && Object.keys(entities).length !== 0 && data
+  data = data && (typeof data === 'string' || result.length === 0 && Object.keys(entities).length !== 0)
     ? [data]
     : [].concat(result);
 
