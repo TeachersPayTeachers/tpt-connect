@@ -1,6 +1,6 @@
 {
   "name": "@teachers/tpt-connect",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "TpT-Connect is an extension to [Redux](https://github.com/reactjs/redux) which creates a simple interface for components' data fetching.",
   "main": "lib",
   "engines": {

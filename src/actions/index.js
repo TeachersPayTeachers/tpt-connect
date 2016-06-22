@@ -9,7 +9,7 @@ export const CONNECT_FAILURE = 'CONNECT_FAILURE';
 export const CONNECT_PREPOPULATE = 'CONNECT_PREPOPULATE';
 export const CONNECT_INVALIDATE = 'CONNECT_INVALIDATE';
 
-export function computePayload(resourceDefinition, meta, data) {
+export function computePayload(resourceDefinition, meta, data, response) {
   const { schema, normalize = _normalize } = resourceDefinition;
   const { entities = {}, result = [] } = typeof data === 'object'
     ? normalize(data, schema)
@@ -21,7 +21,9 @@ export function computePayload(resourceDefinition, meta, data) {
     : [].concat(result);
 
   return {
-    lastResponse: meta.response,
+    // TODO: this is a hack only have last response when we are rendering server
+    // side
+    lastResponse: typeof window === 'undefined' && response,
     resources: result.length !== 0 ? entities : {},
     paramsToResources: {
       [resourceDefinition.requestKey]: {
@@ -50,7 +52,7 @@ function onResponse(resourceDefinition, meta, opts) {
       opts.onSuccess && setTimeout(() => {
         opts.onSuccess({ data, response });
       });
-      return computePayload(resourceDefinition, { ...meta, response }, data);
+      return computePayload(resourceDefinition, meta, data);
     }).catch((err) => {
       logger.error('Failed to fetch resource:', resourceDefinition, err);
       opts.onError && setTimeout(() => {
@@ -63,7 +65,7 @@ function onResponse(resourceDefinition, meta, opts) {
         data = JSON.parse(err.message);
       } catch (e) {}
 
-      return computePayload(resourceDefinition, { ...meta, response }, data);
+      return computePayload(resourceDefinition, meta, data, response);
     });
   };
 }
