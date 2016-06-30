@@ -10,6 +10,8 @@ export const CONNECT_PREPOPULATE = 'CONNECT_PREPOPULATE';
 export const CONNECT_INVALIDATE = 'CONNECT_INVALIDATE';
 
 export function computePayload(resourceDefinition, meta, data, response) {
+  if (!resourceDefinition.store) { return {}; }
+
   const { schema, normalize = _normalize } = resourceDefinition;
   const { entities = {}, result = [] } = typeof data === 'object'
     ? normalize(data, schema)

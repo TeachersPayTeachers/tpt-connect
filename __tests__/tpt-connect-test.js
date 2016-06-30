@@ -6,7 +6,7 @@ import TestUtils from 'react/lib/ReactTestUtils';
 import { Provider } from 'react-redux';
 import { createStore, combineReducers, applyMiddleware } from 'redux';
 import {
-  connect,
+  defineResources,
   Schema,
   arrayOf,
   connectReducer,
@@ -50,7 +50,7 @@ function renderComponent(mappingFunc) {
     }
   }));
 
-  const NewComponent = connect(mappingFunc)(_Component);
+  const NewComponent = defineResources(mappingFunc)(_Component);
   provider = TestUtils.renderIntoDocument(
     <Provider store={store}>
       <NewComponent />
@@ -363,7 +363,7 @@ describe('tpt-connect', () => {
 
     beforeEach(() => {
       spyFunc.calls.reset();
-      const _NewComponent = connect(mappingFunc)(_Component);
+      const _NewComponent = defineResources(mappingFunc)(_Component);
       provider = TestUtils.renderIntoDocument(
         <ConnectProvider onSuccess={spyFunc}>
           <_NewComponent />

@@ -1,6 +1,5 @@
 import querystring from 'querystring';
 import normalizeUrl from 'normalize-url';
-import { merge } from 'lodash';
 import crypto from 'crypto';
 import debug from 'debug';
 import { normalize } from 'normalizr';
@@ -72,14 +71,10 @@ export function findInState(state, resourceDefinition) {
     mappedResources = mappedResources[0];
   }
 
-  if (typeof mappedResources === 'object') {
-    return merge(isArray ? [] : {}, mappedResources, { _meta: resourceMap.meta });
-  }
-
-  // handle primitive types -- convert to object representation and assign meta
-  mappedResources = Object(mappedResources);
-  mappedResources._meta = resourceMap.meta;
-  return mappedResources;
+  return {
+    meta: resourceMap.meta,
+    value: mappedResources
+  };
 }
 
 export function fullUrl(url, params) {
@@ -105,38 +100,44 @@ export const logger = (function () {
   return { error, info };
 }());
 
-const resourceDefaults = {
+const definitionDefaults = {
   method: 'GET',
-  normalize
+  normalize,
+  actions: {},
+  extends: {},
+  clientOnly: false,
+  _old: {}
 };
 
-export function normalizeResourceDefinition(resource) {
-  resource = merge({}, resourceDefaults, resource.extends || {}, resource);
+export function normalizeResourceDefinition(definition) {
+  definition = { ...definitionDefaults, ...(definition.extends || {}), ...definition };
 
-  invariant(resource.schema !== undefined, 'Resource definition must have a schema.');
+  invariant(definition.schema !== undefined, 'Resource definition must have a schema.');
   invariant(
-    !/\?[^#]/.test(resource.url),
+    !/\?[^#]/.test(definition.url),
     'Include query parameters under `params` in your resource definition ' +
     'instead of directly in the URL.'
   );
 
-  resource.url = fullUrl(resource.url, resource.params);
-  resource.method = resource.method.toUpperCase();
-  resource.isArray = !resource.schema.getKey;
-  if (resource.defaultValue === undefined) {
-    resource.defaultValue = resource.isArray ? [] : {};
-  } else {
-    // making sure we dont end up with a primitive so we can add _meta below
-    resource.defaultValue = Object(resource.defaultValue);
-  }
-  resource.defaultValue._meta = {};
-  resource.requestKey = requestKey(resource);
+  definition.url = fullUrl(definition.url, definition.params);
+  definition.method = definition.method.toUpperCase();
+  definition.isArray = !definition.schema.getKey;
+  definition.requestKey = requestKey(definition);
 
-  if (resource.auto === undefined && resource.method === 'GET') {
-    resource.auto = true;
+  if (definition.defaultValue === undefined) {
+    definition.defaultValue = definition.isArray ? [] : {};
   }
 
-  return resource;
+  if (definition.method === 'GET') {
+    if (definition.auto === undefined) {
+      definition.auto = true;
+    }
+    if (definition.store === undefined) {
+      definition.store = true;
+    }
+  }
+
+  return definition;
 }
 
 export function computeExternalPayload(resourceDefinition, json) {
@@ -146,3 +147,12 @@ export function computeExternalPayload(resourceDefinition, json) {
     json
   );
 }
+
+export function extendFunction(...functions) {
+  return (...args) => {
+    for (const func of functions) {
+      typeof func === 'function' && func.apply(this, args);
+    }
+  };
+}
+
