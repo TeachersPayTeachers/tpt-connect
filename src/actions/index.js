@@ -9,18 +9,21 @@ export const CONNECT_FAILURE = 'CONNECT_FAILURE';
 export const CONNECT_PREPOPULATE = 'CONNECT_PREPOPULATE';
 export const CONNECT_INVALIDATE = 'CONNECT_INVALIDATE';
 
-export function computePayload(resourceDefinition, meta, json) {
+export function computePayload(resourceDefinition, meta, data, response) {
   const { schema, normalize = _normalize } = resourceDefinition;
-  const { entities = {}, result = [] } = json
-    ? normalize(json, schema)
+  const { entities = {}, result = [] } = typeof data === 'object'
+    ? normalize(data, schema)
     : {};
 
   // if data is not indexable just wrap it in array and store directly under paramsToResources
-  const data = result.length === 0 && Object.keys(entities).length !== 0 && json
-    ? [json]
+  data = data && (typeof data === 'string' || result.length === 0 && Object.keys(entities).length !== 0)
+    ? [data]
     : [].concat(result);
 
   return {
+    // TODO: this is a hack only have last response when we are rendering server
+    // side
+    lastResponse: typeof window === 'undefined' && response,
     resources: result.length !== 0 ? entities : {},
     paramsToResources: {
       [resourceDefinition.requestKey]: {
@@ -39,13 +42,17 @@ function onResponse(resourceDefinition, meta, opts) {
       lastUpdated: Date.now()
     }, meta);
 
-    return response.json().then((json) => {
-      if (!response.ok) { throw new Error(JSON.stringify(json)); }
+    const type = response.headers.get('content-type').toLowerCase().includes('text/html')
+      ? 'text'
+      : 'json';
+
+    return response[type]().then((data) => {
+      if (!response.ok) { throw new Error(JSON.stringify(data)); }
       logger.info('Fetched resource successfully:', resourceDefinition);
       opts.onSuccess && setTimeout(() => {
-        opts.onSuccess({ json, response });
+        opts.onSuccess({ data, response });
       });
-      return computePayload(resourceDefinition, { ...meta, response }, json);
+      return computePayload(resourceDefinition, meta, data);
     }).catch((err) => {
       logger.error('Failed to fetch resource:', resourceDefinition, err);
       opts.onError && setTimeout(() => {
@@ -53,12 +60,12 @@ function onResponse(resourceDefinition, meta, opts) {
       });
       meta = merge({}, meta, { isSuccess: false, isError: true });
 
-      let json;
+      let data;
       try {
-        json = JSON.parse(err.message);
+        data = JSON.parse(err.message);
       } catch (e) {}
 
-      return computePayload(resourceDefinition, { ...meta, response }, json);
+      return computePayload(resourceDefinition, meta, data, response);
     });
   };
 }

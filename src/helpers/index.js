@@ -72,7 +72,14 @@ export function findInState(state, resourceDefinition) {
     mappedResources = mappedResources[0];
   }
 
-  return merge(isArray ? [] : {}, mappedResources, { _meta: resourceMap.meta });
+  if (typeof mappedResources === 'object') {
+    return merge(isArray ? [] : {}, mappedResources, { _meta: resourceMap.meta });
+  }
+
+  // handle primitive types -- convert to object representation and assign meta
+  mappedResources = Object(mappedResources);
+  mappedResources._meta = resourceMap.meta;
+  return mappedResources;
 }
 
 export function fullUrl(url, params) {
@@ -116,7 +123,12 @@ export function normalizeResourceDefinition(resource) {
   resource.url = fullUrl(resource.url, resource.params);
   resource.method = resource.method.toUpperCase();
   resource.isArray = !resource.schema.getKey;
-  resource.defaultValue = resource.isArray ? [] : {};
+  if (resource.defaultValue === undefined) {
+    resource.defaultValue = resource.isArray ? [] : {};
+  } else {
+    // making sure we dont end up with a primitive so we can add _meta below
+    resource.defaultValue = Object(resource.defaultValue);
+  }
   resource.defaultValue._meta = {};
   resource.requestKey = requestKey(resource);
 
