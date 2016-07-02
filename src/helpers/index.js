@@ -1,6 +1,6 @@
 import querystring from 'querystring';
 import normalizeUrl from 'normalize-url';
-import crypto from 'crypto';
+import stringHash from 'string-hash';
 import debug from 'debug';
 import { normalize } from 'normalizr';
 import { computePayload } from '../actions';
@@ -41,12 +41,12 @@ export function normalizeParams(params = {}) {
 }
 
 export function requestKey({ url, headers, method, body }) {
-  return crypto.createHash('md5').update([
+  return stringHash([
     method,
     url,
     normalizeParams(headers), // TODO: lowercase header keys
     normalizeParams(body)
-  ].map(encodeURIComponent).join('|')).digest('hex');
+  ].map(encodeURIComponent).join('|'));
 }
 
 export function findInState(state, resourceDefinition) {

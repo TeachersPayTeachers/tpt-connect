@@ -29,20 +29,13 @@ import {
 class DemoComponent extends Component {
   componentDidMount() {
     const { user } = this.props;
-
-    console.log('refetching');
     user.fetch();
-
-    console.log('creating');
     user.create();
-
-    console.log('getting a diff ID');
     user.byId(7);
   }
 
   render() {
     const { children, user } = this.props;
-    console.count('rendering');
     return (
       <div>
         This is your user:

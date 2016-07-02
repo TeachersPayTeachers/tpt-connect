@@ -82,7 +82,7 @@ class User extends Component {
           { followers.map((follower) =>
             <div>
               <p>{ follower.name }</p>
-              <button onClick={ followers.delete(follower.id) }>Remove Follower</button>
+              <button onClick={ () => followers.delete(follower.id) }>Remove Follower</button>
             </div>
           ) }
         </div>
@@ -125,7 +125,7 @@ exports default defineResources((state, ownProps) => {
           }),
           delete: (followerId) => ({
             method: 'DELETE',
-            url: `http://tpt.com/users/${ownProps.userId}/followers/{followerId}`
+            url: `http://tpt.com/users/${ownProps.userId}/followers/${followerId}`
           })
         }
       }
