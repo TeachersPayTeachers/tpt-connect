@@ -66,9 +66,9 @@ class User extends Component {
 
     return (
       <div>
-        { user.isDeleted && this.renderDeleteNotification() }
-        <p>Name: { user.name }</p>
-        <p>Deleted: { user.isDeleted }</p>
+        { user.value.isDeleted && this.renderDeleteNotification() }
+        <p>Name: { user.value.name }</p>
+        <p>Deleted: { user.value.isDeleted }</p>
 
         <button onClick={ user.delete }}>
           DELETE USER
@@ -79,7 +79,7 @@ class User extends Component {
         </button>
 
         <div>
-          { followers.map((follower) =>
+          { followers.value.map((follower) =>
             <div>
               <p>{ follower.name }</p>
               <button onClick={ () => followers.delete(follower.id) }>Remove Follower</button>
@@ -134,14 +134,6 @@ exports default defineResources((state, ownProps) => {
   };
 })(User);
 ```
-
-The aforementioned `defineResources` function is an extension to
-[React-Redux](https://github.com/reactjs/react-redux)'s method and therefore it
-offers all of the functionality the Redux method does.
-
-The only additions are the `resources` object which lists definitions for the
-resources required for the component, and the `fetchResource` method which
-dispatches a request action.
 
 These are the options each resource definition takes:
 
