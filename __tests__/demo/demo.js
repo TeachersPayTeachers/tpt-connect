@@ -18,7 +18,7 @@ import {
         create: {
           method: 'POST',
           url: 'http://example.com/create',
-          store: false
+          store: true
         },
         byId(id) {
           return {
@@ -37,9 +37,9 @@ import {
 class DemoComponent extends Component {
   componentDidMount() {
     const { user } = this.props;
-    //user.fetch();
-    //user.create();
-    //user.byId(7);
+    user.fetch();
+    user.create();
+    user.byId(7);
   }
 
   render() {

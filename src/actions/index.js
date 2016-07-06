@@ -1,6 +1,5 @@
 import { CALL_API } from 'redux-api-middleware';
 import { schemaKey, logger } from '../helpers';
-import { merge } from 'lodash';
 import { normalize as _normalize } from 'normalizr';
 
 export const CONNECT_REQUEST = 'CONNECT_REQUEST';
@@ -10,9 +9,9 @@ export const CONNECT_PREPOPULATE = 'CONNECT_PREPOPULATE';
 export const CONNECT_INVALIDATE = 'CONNECT_INVALIDATE';
 
 export function computePayload(resourceDefinition, meta, data, response) {
-  if (!resourceDefinition.store) { return {}; }
+  const { schema, normalize = _normalize, store } = resourceDefinition;
+  if (!store) { return {}; }
 
-  const { schema, normalize = _normalize } = resourceDefinition;
   const { entities = {}, result = [] } = typeof data === 'object'
     ? normalize(data, schema)
     : {};
@@ -23,14 +22,13 @@ export function computePayload(resourceDefinition, meta, data, response) {
     : [].concat(result);
 
   return {
-    // TODO: this is a hack only have last response when we are rendering server
-    // side
+    store, // so reducer can decide if to append paramsToResources or replace
     lastResponse: typeof window === 'undefined' && response,
     resources: result.length !== 0 ? entities : {},
     paramsToResources: {
       [resourceDefinition.requestKey]: {
         meta,
-        data: { [schemaKey(resourceDefinition)]: data }
+        data: { [schemaKey(resourceDefinition)]: data },
       }
     }
   };
@@ -38,11 +36,12 @@ export function computePayload(resourceDefinition, meta, data, response) {
 
 function onResponse(resourceDefinition, meta, opts) {
   return (action, state, response) => {
-    meta = merge({}, {
+    meta = {
+      ...meta,
       didInvalidate: false,
       isFetching: false,
       lastUpdated: Date.now()
-    }, meta);
+    };
 
     const type = response.headers.get('content-type').toLowerCase().includes('text/html')
       ? 'text'
@@ -60,7 +59,12 @@ function onResponse(resourceDefinition, meta, opts) {
       opts.onError && setTimeout(() => {
         opts.onError({ error: err, response });
       });
-      meta = merge({}, meta, { isSuccess: false, isError: true });
+      meta = {
+        ...meta,
+        isSuccess: false,
+        isError: true,
+        response
+      };
 
       let data;
       try {

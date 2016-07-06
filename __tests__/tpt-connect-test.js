@@ -45,9 +45,7 @@ function defer(func) {
 
 function renderComponent(mappingFunc) {
   mappingFunc || (mappingFunc = () => ({
-    resources: {
-      user: resourceDefinition
-    }
+    user: resourceDefinition
   }));
 
   const NewComponent = defineResources(mappingFunc)(_Component);
@@ -104,7 +102,7 @@ describe('tpt-connect', () => {
 
   it('completes the resource definition with its resource defaults', () => {
     renderComponent();
-    expect(domElement._props.resources.user.method).toEqual('GET');
+    expect(domElement._props.user.definition.method).toEqual('GET');
   });
 
   it('does not intervene with normal Redux functionality', (done) => {
@@ -137,7 +135,7 @@ describe('tpt-connect', () => {
       it('sets the meta.isError flag to true', (done) => {
         renderComponent();
         defer(() => {
-          expect(domElement._props.user._meta.isError).toBe(true);
+          expect(domElement._props.user.meta.isError).toBe(true);
           done();
         });
       });
@@ -145,7 +143,7 @@ describe('tpt-connect', () => {
       it('returns the error instead of the resource', (done) => {
         renderComponent();
         defer(() => {
-          expect(domElement._props.user.error).toEqual('This is an error');
+          expect(domElement._props.user.value.error).toEqual('This is an error');
           done();
         });
       });
@@ -162,9 +160,9 @@ describe('tpt-connect', () => {
           });
         });
 
-        it('sends another request if used the `dispatchRequest` method', (done) => {
+        it('sends another request if used the `fetch` method', (done) => {
           renderComponent();
-          domElement._props.dispatchRequest({ ...resourceDefinition, ...{ method: 'GET' } });
+          domElement._props.user.fetch();
           defer(() => {
             expect(window.fetch.calls.count()).toEqual(2);
             done();
@@ -179,14 +177,13 @@ describe('tpt-connect', () => {
               'http://www.url.com',
               'http://url.com/',
               'http://url.com?',
+              'http://url.com//',
               'url.com/?'
             ].forEach((url) => {
               renderComponent(() => ({
-                resources: {
-                  users: {
-                    url,
-                    schema: arrayOf(userSchema)
-                  }
+                users: {
+                  url,
+                  schema: arrayOf(userSchema)
                 }
               }));
             });
@@ -204,12 +201,10 @@ describe('tpt-connect', () => {
               { Accept: 'application/json', 'Content-Type': 'application/json' }
             ].forEach((headers) => {
               renderComponent(() => ({
-                resources: {
-                  users: {
-                    url: 'http://url.com',
-                    headers,
-                    schema: arrayOf(userSchema)
-                  }
+                users: {
+                  url: 'http://url.com',
+                  headers,
+                  schema: arrayOf(userSchema)
                 }
               }));
             });
@@ -224,9 +219,7 @@ describe('tpt-connect', () => {
 
     describe('when data is NOT in state', () => {
       it('refetches it', (done) => {
-        renderComponent(() => ({
-          resources: { item: { url: 'tpt.com/item', schema: new Schema('item') } }
-        }));
+        renderComponent(() => ({ item: { url: 'tpt.com/item', schema: new Schema('item') } }));
         renderComponent();
         defer(() => {
           expect(window.fetch.calls.count()).toEqual(2);
@@ -255,12 +248,10 @@ describe('tpt-connect', () => {
       it('fires the request automatically when relevant props change', (done) => {
         const mapFunc = (state) => {
           return {
-            resources: {
-              users: {
-                schema: arrayOf(userSchema),
-                url: 'http://tpt.com/users',
-                params: { query: state.routing.query }
-              }
+            users: {
+              schema: arrayOf(userSchema),
+              url: 'http://tpt.com/users',
+              params: { query: state.routing.query }
             }
           };
         };
@@ -298,12 +289,10 @@ describe('tpt-connect', () => {
             { 'X-Secre': 'tblah' }
           ].forEach((headers) => {
             renderComponent(() => ({
-              resources: {
-                users: {
-                  headers,
-                  url: 'http://url.com',
-                  schema: arrayOf(userSchema)
-                }
+              users: {
+                headers,
+                url: 'http://url.com',
+                schema: arrayOf(userSchema)
               }
             }));
           });
@@ -327,9 +316,7 @@ describe('tpt-connect', () => {
     describe('when data is NOT in state', () => {
       it('does not fire automatically', (done) => {
         renderComponent(() => ({
-          resources: {
-            users: usersDefinition
-          }
+          users: usersDefinition
         }));
         defer(() => {
           expect(window.fetch.calls.count()).toEqual(0);
@@ -337,18 +324,16 @@ describe('tpt-connect', () => {
         });
       });
 
-      it('stores returned resource', (done) => {
+      it('does not store returned resource automatically', (done) => {
         renderComponent(() => ({
-          resources: {
-            users: usersDefinition
-          }
+          users: usersDefinition
         }));
-        domElement._props.dispatchRequest(usersDefinition);
+        domElement._props.users.fetch();
         defer(() => {
           expect(window.fetch.calls.count()).toEqual(1);
           const state = provider.props.store.getState().connect;
-          expect(Object.keys(state.resources.user).length).toEqual(1);
-          expect(Object.keys(state.paramsToResources).length).toEqual(1);
+          expect(state.resources).toBe(undefined);
+          expect(Object.keys(state.paramsToResources).length).toEqual(0);
           done();
         });
       });
@@ -357,9 +342,7 @@ describe('tpt-connect', () => {
 
   describe('Global options', () => {
     const spyFunc = jasmine.createSpy();
-    const mappingFunc = () => ({
-      resources: { users: { ...resourceDefinition } }
-    });
+    const mappingFunc = () => ({ users: { ...resourceDefinition } });
 
     beforeEach(() => {
       spyFunc.calls.reset();
@@ -373,7 +356,7 @@ describe('tpt-connect', () => {
     });
 
     it('executes functions passed in directly to dispatchRequest AND global funcs', (done) => {
-      domElement._props.dispatchRequest({ ...resourceDefinition, ...{ method: 'GET' } }).then(spyFunc);
+      domElement._props.users.fetch().then(spyFunc);
       defer(() => {
         expect(spyFunc.calls.count()).toEqual(3);
         done();

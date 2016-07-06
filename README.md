@@ -94,7 +94,8 @@ class User extends Component {
 exports default defineResources((state, ownProps) => {
   const userSchema = new Schema('user');
 
-  // this will pull out users if we got them nested with initial user request
+  // this will pull out users if we got them nested under `followers` with the
+  // initial user request
   userSchema.define({
     followers: arrayOf(userSchema)
   });
@@ -109,6 +110,7 @@ exports default defineResources((state, ownProps) => {
         },
         update: (newProps) => ({
           method: 'PATCH',
+          store: true, // will replace the current user with the returned resource
           body: {
             id: ownProps.userId,
             lastName: newProps.lastName
@@ -118,13 +120,13 @@ exports default defineResources((state, ownProps) => {
     },
 
     followers: {
-      schema: arrayOf(userSchema),
+      schema: arrayOf(userSchema), // handling same resource schema
       url: `http://tpt.com/users/${ownProps.userId}/followers`,
       auto: false,
       actions: {
         create: (params) => ({
           method: 'POST',
-          store: true,
+          store: 'append', // will update the store with the additional follower ID
           body: {
             firstName: params.firstName,
             lastName: params.lastName
@@ -132,6 +134,7 @@ exports default defineResources((state, ownProps) => {
         }),
         delete: (followerId) => ({
           method: 'DELETE',
+          store: 'reduct', // will remove the returned id from our follower IDs
           url: `http://tpt.com/users/${ownProps.userId}/followers/${followerId}`
         })
       }
@@ -186,24 +189,29 @@ These are the options each resource definition takes:
   normalize(Object json, Schema schema, [Object options]) : Object normalizedJson
   ```
 
-- `store` (`Boolean`, options, defaults to `true` when `GET`; otherwise
+- `store` (`Boolean|String`, optional, defaults to `true` when `GET`; otherwise
   `false`) - whether or not TpT-Connect should store the response data in its
-  Redux store.
+  Redux store. Available options are: `'replace'` (same as `true`), `'append'`
+  (adds the returned resource to the existing resources in the state), and
+  `'reduct'` (removes the returned resources from the resources in the state)
 
 - `debounce` (`Number`, optional) - number of milliseconds TpT-Connect should
   debounce subsequent requests by for this resource definition. For example,
   this feature would be useful when used to fetch search results as the user
   types.
 
-- `actions` (`Object`, optional) - an object defining functions or objects that
-  will be available on the TpT-Connect resource. Calling those functions will
-  execute the defined action. For more information, check out the example
-  above.
+- `actions` (`Object`, optional) - an object defining functions, or
+  sub-objects, which are used as sub-resource definitions to request at a later
+  time and will be available on the TpT-Connect resource. Calling an action
+  will execute the defined action and return the promise yielded from the
+  dispatched request. For more information, check out the example above.
 
   - Built-in actions on all resources:
-    - `fetch` - will force fetch the data
-    - `invalidate` - will mark the data as invalid in the store and not
-      retrieve it from the state
+    - `fetch` - force fetch the data.
+    - `invalidate` - marks the data as invalid in the store and therefore will
+      not retrieve it from the state anymore.
+    - `prepopulate` - prepopulate the store with a placeholder for the resource
+      until it is fetched successfully.
 
 ### Server Rendering
 

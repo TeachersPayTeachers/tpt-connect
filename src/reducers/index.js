@@ -1,4 +1,4 @@
-import { merge } from 'lodash';
+import merge from 'lodash.merge';
 import { logger } from '../helpers';
 import {
   CONNECT_INVALIDATE,
@@ -30,7 +30,29 @@ export default function connectReducer(state = {}, { type, error, payload }) {
     fetchesCount++;
   }
 
+  // TODO: i hate this:
+  state.paramsToResources || (state.paramsToResources = {});
+  if (payload.store === 'append') {
+    Object.keys(payload.paramsToResources).forEach((key) => {
+      state.paramsToResources[key] || (state.paramsToResources[key] = []);
+      payload.paramsToResources[key] = state.paramsToResources[key]
+        .concat(payload.paramsToResources[key]);
+    });
+  } else if (payload.store === 'reduct') {
+    Object.keys(payload.paramsToResources).forEach((key) => {
+      state.paramsToResources[key] || (state.paramsToResources[key] = []);
+      payload.paramsToResources[key] = state.paramsToResources[key]
+        .filter((id) => !payload.paramsToResources[key].includes(id));
+    });
+  }
+
+  delete payload.store;
+
   return merge({}, state, payload, {
+    paramsToResources: { // making sure we're not merging arrays
+      ...state.paramsToResources,
+      ...payload.paramsToResources
+    },
     fetchesCount,
     isAllFetched: fetchesCount === 0,
     error: error ? payload : false
