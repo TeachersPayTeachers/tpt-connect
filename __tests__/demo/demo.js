@@ -12,6 +12,8 @@ import {
     user: {
       schema: new Schema('user'),
       url: `http://example.com/${ownProps.id}`,
+      debounce: 500,
+      defaultValue: { name: 'Peleg' },
       actions: {
         create: {
           method: 'POST',
@@ -35,9 +37,9 @@ import {
 class DemoComponent extends Component {
   componentDidMount() {
     const { user } = this.props;
-    user.fetch();
-    user.create();
-    user.byId(7);
+    //user.fetch();
+    //user.create();
+    //user.byId(7);
   }
 
   render() {
@@ -52,7 +54,7 @@ class DemoComponent extends Component {
   }
 }
 
-function getTree(id = 3) {
+function getTree(id) {
   return (
     <ConnectProvider>
       <DemoComponent id={ id }>
@@ -64,5 +66,6 @@ function getTree(id = 3) {
 
 window.onload = () => {
   ReactDOM.render(getTree(4), document.getElementById('mount'));
-  ReactDOM.render(getTree(), document.getElementById('mount'));
+  ReactDOM.render(getTree(5), document.getElementById('mount'));
+  ReactDOM.render(getTree(6), document.getElementById('mount'));
 };

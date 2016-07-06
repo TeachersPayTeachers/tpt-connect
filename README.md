@@ -94,6 +94,11 @@ class User extends Component {
 exports default defineResources((state, ownProps) => {
   const userSchema = new Schema('user');
 
+  // this will pull out users if we got them nested with initial user request
+  userSchema.define({
+    followers: arrayOf(userSchema)
+  });
+
   return {
     user: {
       schema: userSchema,
@@ -109,28 +114,28 @@ exports default defineResources((state, ownProps) => {
             lastName: newProps.lastName
           }
         })
-      },
+      }
+    },
 
-      followers: {
-        schema: arrayOf(userSchema),
-        url: `http://tpt.com/users/${ownProps.userId}/followers`,
-        auto: false,
-        actions: {
-          create: (params) => ({
-            method: 'POST',
-            body: {
-              firstName: params.firstName,
-              lastName: params.lastName
-            }
-          }),
-          delete: (followerId) => ({
-            method: 'DELETE',
-            url: `http://tpt.com/users/${ownProps.userId}/followers/${followerId}`
-          })
-        }
+    followers: {
+      schema: arrayOf(userSchema),
+      url: `http://tpt.com/users/${ownProps.userId}/followers`,
+      auto: false,
+      actions: {
+        create: (params) => ({
+          method: 'POST',
+          store: true,
+          body: {
+            firstName: params.firstName,
+            lastName: params.lastName
+          }
+        }),
+        delete: (followerId) => ({
+          method: 'DELETE',
+          url: `http://tpt.com/users/${ownProps.userId}/followers/${followerId}`
+        })
       }
     }
-
   };
 })(User);
 ```
@@ -155,7 +160,7 @@ These are the options each resource definition takes:
   are hardcoded in the URL, TpT-Connect will not be able to normalize them and
   store the resource for future use by other components.
 
-- `method` (`Object`, optional, defaults to `GET`) - the request's method to be
+- `method` (`String`, optional, defaults to `GET`) - the request's method to be
   used.
 
 - `headers` (`Object`, optional, defaults to `{ 'Content-Type':
@@ -185,14 +190,20 @@ These are the options each resource definition takes:
   `false`) - whether or not TpT-Connect should store the response data in its
   Redux store.
 
+- `debounce` (`Number`, optional) - number of milliseconds TpT-Connect should
+  debounce subsequent requests by for this resource definition. For example,
+  this feature would be useful when used to fetch search results as the user
+  types.
+
 - `actions` (`Object`, optional) - an object defining functions or objects that
-  will be available on the TpT Connect resource. Calling those functions will
+  will be available on the TpT-Connect resource. Calling those functions will
   execute the defined action. For more information, check out the example
   above.
 
   - Built-in actions on all resources:
     - `fetch` - will force fetch the data
-    - `invalidate` - will mark the data as invalid in the store
+    - `invalidate` - will mark the data as invalid in the store and not
+      retrieve it from the state
 
 ### Server Rendering
 
@@ -202,15 +213,15 @@ in its store, the above example could be easily rendered on the server as well:
 ```JavaScript
 
 // By setting `isServer`, TpT-Connect knows to fetch even w/out
-// componentDidMount which is called only on client
+// `componentDidMount` which is called only on client
 const tree = (
   <ConnectProvider isServer store={ myStore }>
     <RootComponent />
   </ConnectProvider>
 );
 
-// Subscribing to our store to respond to client only when all of our data is
-// ready
+// Subscribing to our store so we can respond to client only when all of our
+data is ready
 const unsubscribe = myStore.subscribe(() => {
   if (myStore.getState().connect.isAllFetched) {
     // trigger second render now that we have all data

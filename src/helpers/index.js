@@ -105,8 +105,7 @@ const definitionDefaults = {
   normalize,
   actions: {},
   extends: {},
-  clientOnly: false,
-  _old: {}
+  clientOnly: false
 };
 
 export function normalizeResourceDefinition(definition) {
