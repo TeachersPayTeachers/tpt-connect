@@ -9,8 +9,8 @@ export const CONNECT_PREPOPULATE = 'CONNECT_PREPOPULATE';
 export const CONNECT_INVALIDATE = 'CONNECT_INVALIDATE';
 
 export function computePayload(resourceDefinition, meta, data, response) {
-  const { schema, normalize = _normalize, store } = resourceDefinition;
-  if (!store) { return {}; }
+  const { schema, normalize = _normalize, updateStrategy } = resourceDefinition;
+  if (!updateStrategy) { return {}; }
 
   const { entities = {}, result = [] } = typeof data === 'object'
     ? normalize(data, schema)
@@ -23,7 +23,7 @@ export function computePayload(resourceDefinition, meta, data, response) {
     : [].concat(result);
 
   return {
-    store, // so reducer can decide if to append paramsToResources or replace
+    updateStrategy, // so reducer can decide if to append paramsToResources or replace
     lastResponse: typeof window === 'undefined' && response,
     resources: result.length !== 0 ? entities : {},
     paramsToResources: {

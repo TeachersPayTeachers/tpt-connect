@@ -30,18 +30,18 @@ export default function connectReducer(state = {}, { type, error, payload }) {
     fetchesCount++;
   }
 
-  const storeOpt = payload.store;
-  delete payload.store;
+  const { updateStrategy } = payload;
+  delete payload.updateStrategy;
 
   return mergeWith({}, state, payload, {
     fetchesCount,
     isAllFetched: fetchesCount === 0,
     error: error ? payload : false
   }, (oldValue, newValue) => { // custom merger to handle arrays
-    if (storeOpt && Array.isArray(oldValue) && Array.isArray(newValue)) {
-      if (storeOpt === 'append') { // TODO: concat only uniques?
+    if (updateStrategy && Array.isArray(oldValue) && Array.isArray(newValue)) {
+      if (updateStrategy === 'append') { // TODO: concat only uniques?
         newValue = oldValue.concat(newValue);
-      } else if (storeOpt === 'reduct') {
+      } else if (updateStrategy === 'remove') {
         newValue = oldValue.filter((id) => !newValue.includes(id));
       }
       return newValue;

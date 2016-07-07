@@ -78,7 +78,6 @@ export function findInState(state, resourceDefinition) {
 }
 
 export function fullUrl(url, params) {
-  url = url.replace(/\/+$/, '');
   params && (url = `${url}/?${normalizeParams(params)}`);
   return normalizeUrl(url, { stripWWW: false });
 }
@@ -131,8 +130,8 @@ export function normalizeResourceDefinition(definition) {
     if (definition.auto === undefined) {
       definition.auto = true;
     }
-    if (definition.store === undefined) {
-      definition.store = true;
+    if (definition.updateStrategy === undefined) {
+      definition.updateStrategy = 'replace';
     }
   }
 

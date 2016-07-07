@@ -18,7 +18,7 @@ import {
         create: {
           method: 'POST',
           url: 'http://example.com/create',
-          store: true
+          updateStrategy: 'replace'
         },
         byId(id) {
           return {

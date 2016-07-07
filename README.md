@@ -112,7 +112,7 @@ exports default defineResources((state, ownProps) => {
         },
         update: (newProps) => ({
           method: 'PATCH',
-          store: true, // will replace the current user with the returned resource
+          updateStrategy: true, // will replace the current user with the returned resource
           body: {
             id: ownProps.userId,
             lastName: newProps.lastName
@@ -128,7 +128,7 @@ exports default defineResources((state, ownProps) => {
       actions: {
         create: (params) => ({
           method: 'POST',
-          store: 'append', // will update the store with the additional follower ID
+          updateStrategy: 'append', // will update the store with the additional follower ID
           body: {
             firstName: params.firstName,
             lastName: params.lastName
@@ -136,7 +136,7 @@ exports default defineResources((state, ownProps) => {
         }),
         delete: (followerId) => ({
           method: 'DELETE',
-          store: 'reduct', // will remove the returned id from our follower IDs
+          updateStrategy: 'remove', // will remove the returned id from our follower IDs
           url: `http://tpt.com/users/${ownProps.userId}/followers/${followerId}`
         })
       }
@@ -191,11 +191,12 @@ These are the options each resource definition takes:
   normalize(Object json, Schema schema, [Object options]) : Object normalizedJson
   ```
 
-- `store` (`Boolean|String`, optional, defaults to `true` when `GET`; otherwise
-  `false`) - whether or not TpT-Connect should store the response data in its
-  Redux store. Available options are: `'replace'` (same as `true`), `'append'`
-  (adds the returned resource to the existing resources in the state), and
-  `'reduct'` (removes the returned resources from the resources in the state)
+- `updateStrategy` (`Boolean|String, optional, defaults to `replace` when
+  `GET`; otherwise `false`) - whether or not TpT-Connect should store the
+  response data in its Redux store. Available options are: `'replace'` (same as
+  `true`), `'append'` (adds the returned resource to the existing resources in
+  the state), and `'remove'` (removes the returned resources from the resources
+  in the state), or `false` to not store at all.
 
 - `debounce` (`Number`, optional) - number of milliseconds TpT-Connect should
   debounce subsequent requests by for this resource definition. For example,

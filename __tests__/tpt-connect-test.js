@@ -418,7 +418,7 @@ describe('tpt-connect', () => {
   });
 
   describe('resource options', () => {
-    describe('when store is set to "append"', () => {
+    describe('when updateStrategy is set to "append"', () => {
       beforeEach(() => {
         renderComponent(() => ({
           users: {
@@ -426,7 +426,7 @@ describe('tpt-connect', () => {
             actions: {
               more: {
                 params: { offset: 100 },
-                store: 'append'
+                updateStrategy: 'append'
               }
             }
           }
@@ -447,7 +447,7 @@ describe('tpt-connect', () => {
         });
       });
     });
-    describe('when store is set to "reduct"', () => {
+    describe('when updateStrategy is set to "remove"', () => {
       beforeEach(() => {
         renderComponent(() => ({
           users: {
@@ -455,7 +455,7 @@ describe('tpt-connect', () => {
             actions: {
               more: {
                 params: { offset: 100 },
-                store: 'reduct'
+                updateStrategy: 'remove'
               }
             }
           }
@@ -476,7 +476,7 @@ describe('tpt-connect', () => {
         });
       });
     });
-    describe('when store is set to "replace"', () => {
+    describe('when updateStrategy is set to "replace"', () => {
       beforeEach(() => {
         renderComponent(() => ({
           users: {
@@ -484,7 +484,7 @@ describe('tpt-connect', () => {
             actions: {
               more: {
                 params: { offset: 100 },
-                store: 'replace'
+                updateStrategy: 'replace'
               }
             }
           }
