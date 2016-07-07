@@ -71,7 +71,7 @@
   "dependencies": {
     "hoist-non-react-statics": "^1.2.0",
     "invariant": "2.2.1",
-    "lodash.merge": "^4.4.0",
+    "lodash.mergewith": "^4.4.0",
     "normalize-url": "git://github.com/Peleg/normalize-url.git#v1.5.4",
     "normalizr": "2.0.0",
     "querystring": "^0.2.0",

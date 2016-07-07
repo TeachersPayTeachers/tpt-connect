@@ -32,7 +32,7 @@ class _Component extends Component {
 const userSchema = new Schema('user');
 const resourceDefinition = {
   schema: userSchema,
-  url: 'http://tpt.com/id'
+  url: 'http://www.tpt.com/id'
 };
 
 let store;
@@ -333,7 +333,7 @@ describe('tpt-connect', () => {
           expect(window.fetch.calls.count()).toEqual(1);
           const state = provider.props.store.getState().connect;
           expect(state.resources).toBe(undefined);
-          expect(Object.keys(state.paramsToResources).length).toEqual(0);
+          expect(state.paramsToResources).toBe(undefined);
           done();
         });
       });
@@ -369,5 +369,149 @@ describe('tpt-connect', () => {
         done();
       });
     });
+  });
+
+  describe('resource custom actions', () => {
+    beforeEach(() => {
+      renderComponent(() => ({
+        users: {
+          ...resourceDefinition,
+          actions: {
+            create: (params) => ({
+              method: 'POST',
+              body: params,
+              store: true
+            })
+          }
+        }
+      }));
+    });
+
+    it('is available on the resource', () => {
+      expect(domElement._props.users.create).toEqual(jasmine.any(Function));
+    });
+
+    it('inherits missing attributes from its parent resource', (done) => {
+      domElement._props.users.create({ name: 'Peleg' });
+      defer(() => {
+        const [url, opts] = window.fetch.calls.mostRecent().args;
+        expect(opts.body.name).toEqual('Peleg');
+        expect(url).toEqual(resourceDefinition.url);
+        done();
+      });
+    });
+
+    describe('when store is set', () => {
+      it('stores under the parents requestKey', (done) => {
+        defer(() => {
+          let state = provider.props.store.getState().connect;
+          const lengthBefore = Object.keys(state.paramsToResources).length;
+          domElement._props.users.create({});
+          defer(() => {
+            state = provider.props.store.getState().connect;
+            expect(Object.keys(state.paramsToResources).length).toEqual(lengthBefore);
+            done();
+          });
+        });
+      });
+    });
+  });
+
+  describe('resource options', () => {
+    describe('when store is set to "append"', () => {
+      beforeEach(() => {
+        renderComponent(() => ({
+          users: {
+            ...resourceDefinition,
+            actions: {
+              more: {
+                params: { offset: 100 },
+                store: 'append'
+              }
+            }
+          }
+        }));
+      });
+
+      it('appends to paramsToResources', (done) => {
+        defer(() => {
+          let state = provider.props.store.getState().connect;
+          const [requestKey] = Object.keys(state.paramsToResources);
+          const lengthBefore = state.paramsToResources[requestKey].data.user.length;
+          domElement._props.users.more();
+          defer(() => {
+            state = provider.props.store.getState().connect;
+            expect(state.paramsToResources[requestKey].data.user.length).toEqual(lengthBefore + 1);
+            done();
+          });
+        });
+      });
+    });
+    describe('when store is set to "reduct"', () => {
+      beforeEach(() => {
+        renderComponent(() => ({
+          users: {
+            ...resourceDefinition,
+            actions: {
+              more: {
+                params: { offset: 100 },
+                store: 'reduct'
+              }
+            }
+          }
+        }));
+      });
+
+      it('removes from paramsToResources', (done) => {
+        defer(() => {
+          let state = provider.props.store.getState().connect;
+          const [requestKey] = Object.keys(state.paramsToResources);
+          const lengthBefore = state.paramsToResources[requestKey].data.user.length;
+          domElement._props.users.more();
+          defer(() => {
+            state = provider.props.store.getState().connect;
+            expect(state.paramsToResources[requestKey].data.user.length).toEqual(lengthBefore - 1);
+            done();
+          });
+        });
+      });
+    });
+    describe('when store is set to "replace"', () => {
+      beforeEach(() => {
+        renderComponent(() => ({
+          users: {
+            ...resourceDefinition,
+            actions: {
+              more: {
+                params: { offset: 100 },
+                store: 'replace'
+              }
+            }
+          }
+        }));
+      });
+
+      it('replaces paramsToResources with the new value', (done) => {
+        defer(() => {
+          let state = provider.props.store.getState().connect;
+          const [requestKey] = Object.keys(state.paramsToResources);
+          domElement._props.users.more();
+          defer(() => {
+            state = provider.props.store.getState().connect;
+            expect(state.paramsToResources[requestKey].data.user.length).toEqual(1);
+            done();
+          });
+        });
+      });
+    });
+
+    describe('when debounce is set', () => {
+    });
+  });
+
+  describe('when running on server', () => {
+  });
+
+  describe('when running on an already reduxed component', () => {
   });
 });

@@ -1,5 +1,7 @@
 # TpT-Connect
 
+[![CircleCI](https://circleci.com/gh/TeachersPayTeachers/tpt-connect.svg?style=svg&circle-token=3b926562683e2d1715753c3b9ace315165daa519)](https://circleci.com/gh/TeachersPayTeachers/tpt-connect)
+
 TpT-Connect is an extension to [Redux](https://github.com/reactjs/redux) which
 creates a simple interface for components' data fetching.
 
