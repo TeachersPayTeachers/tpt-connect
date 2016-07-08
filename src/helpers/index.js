@@ -2,7 +2,7 @@ import querystring from 'querystring';
 import normalizeUrl from 'normalize-url';
 import stringHash from 'string-hash';
 import debug from 'debug';
-import { normalize } from 'normalizr';
+import { Schema, normalize } from 'normalizr';
 import { computePayload } from '../actions';
 import invariant from 'invariant';
 
@@ -21,9 +21,11 @@ function _sortObject(obj = {}) {
 }
 
 /**
- * Returns the normalizr schema key (ie 'item'/'items', etc)
+ * Returns the normalizr schema key (ie 'item'/'items', etc) if there's a
+ * schema, otherwise it returns 'default'
  */
 export function schemaKey({ schema }) {
+  if (!schema) { return 'default'; }
   return schema.getKey
     ? schema.getKey()
     : schema.getItemSchema().getKey();
@@ -110,16 +112,25 @@ const definitionDefaults = {
 export function normalizeResourceDefinition(definition) {
   definition = { ...definitionDefaults, ...(definition.extends || {}), ...definition };
 
-  invariant(definition.schema !== undefined, 'Resource definition must have a schema.');
+  invariant(
+    definition.url !== undefined,
+    'Must include a URL for TpT-Connect to retrieve your resource'
+  );
+
   invariant(
     !/\?[^#]/.test(definition.url),
     'Include query parameters under `params` in your resource definition ' +
-    'instead of directly in the URL.'
+    'instead of directly in the URL. That will improve TpT-Connect\'s ability' +
+    'to cache your responses'
   );
+
+  if (typeof definition.schema === 'string') {
+    definition.schema = new Schema(definition.schema);
+  }
 
   definition.url = fullUrl(definition.url, definition.params);
   definition.method = definition.method.toUpperCase();
-  definition.isArray = !definition.schema.getKey;
+  definition.isArray = definition.schema && !definition.schema.getKey;
   definition.requestKey = requestKey(definition);
 
   if (definition.defaultValue === undefined) {
@@ -153,4 +164,3 @@ export function extendFunction(...functions) {
     }
   };
 }
-

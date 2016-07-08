@@ -12,7 +12,7 @@ export function computePayload(resourceDefinition, meta, data, response) {
   const { schema, normalize = _normalize, updateStrategy } = resourceDefinition;
   if (!updateStrategy) { return {}; }
 
-  const { entities = {}, result = [] } = typeof data === 'object'
+  const { entities = {}, result = [] } = schema && typeof data === 'object'
     ? normalize(data, schema)
     : {};
 
@@ -24,7 +24,7 @@ export function computePayload(resourceDefinition, meta, data, response) {
 
   return {
     updateStrategy, // so reducer can decide if to append paramsToResources or replace
-    lastResponse: typeof window === 'undefined' && response,
+    lastResponse: typeof window === 'undefined' && response, // TODO: this is shit
     resources: result.length !== 0 ? entities : {},
     paramsToResources: {
       [resourceDefinition.requestKey]: {

@@ -1,6 +1,6 @@
 {
   "name": "@teachers/tpt-connect",
-  "version": "0.1.2",
+  "version": "0.2.0-beta.0",
   "description": "TpT-Connect is an extension to [Redux](https://github.com/reactjs/redux) which creates a simple interface for components' data fetching.",
   "main": "lib",
   "engines": {
@@ -60,7 +60,8 @@
     "sass-loader": "3.1.2",
     "url-loader": "0.5.7",
     "webpack": "1.12.12",
-    "webpack-dev-server": "1.14.1"
+    "webpack-dev-server": "1.14.1",
+    "whatwg-fetch": "^1.0.0"
   },
   "peerDependencies": {
     "react": "^0.14.6",

@@ -94,17 +94,17 @@ class User extends Component {
 }
 
 exports default defineResources((state, ownProps) => {
-  const userSchema = new Schema('user');
+  const usersSchema = new Schema('users');
 
   // this will pull out users if we got them nested under `followers` with the
   // initial user request
-  userSchema.define({
-    followers: arrayOf(userSchema)
+  usersSchema.define({
+    followers: arrayOf(usersSchema)
   });
 
   return {
     user: {
-      schema: userSchema,
+      schema: usersSchema,
       url: `http://tpt.com/users/${ownProps.userId}`,
       actions: {
         delete: {
@@ -112,7 +112,7 @@ exports default defineResources((state, ownProps) => {
         },
         update: (newProps) => ({
           method: 'PATCH',
-          updateStrategy: true, // will replace the current user with the returned resource
+          updateStrategy: 'replace', // will replace the current user with the returned resource
           body: {
             id: ownProps.userId,
             lastName: newProps.lastName
@@ -122,7 +122,7 @@ exports default defineResources((state, ownProps) => {
     },
 
     followers: {
-      schema: arrayOf(userSchema), // handling same resource schema
+      schema: arrayOf(usersSchema), // handling same resource schema
       url: `http://tpt.com/users/${ownProps.userId}/followers`,
       auto: false,
       actions: {
@@ -140,7 +140,9 @@ exports default defineResources((state, ownProps) => {
           url: `http://tpt.com/users/${ownProps.userId}/followers/${followerId}`
         })
       }
-    }
+    },
+
+    cat: 
   };
 })(User);
 ```
@@ -153,10 +155,13 @@ These are the options each resource definition takes:
   changed (ie URL is dependent on `props.id` and it changes after a client
   action).
 
-- `schema` (`Schema`, required) - an instance of
+- `schema` (`Schema|String`, optional) - an instance of
   [normalizr](://github.com/gaearon/normalizr)'s `Schema` used for TpT-Connect
   to infer how the resource returned to be stored in the global state for
-  future use.
+  future use. If a string is given, TpT-Connect will convert it to a simple
+  normalizr Schema with the string as the key. If Schema is not provided,
+  TpT-Connect will not attempt to normalize any of the data returned from the
+  server.
 
 - `url` (`String`, required) - a complete url of the endpoint
 
@@ -191,7 +196,7 @@ These are the options each resource definition takes:
   normalize(Object json, Schema schema, [Object options]) : Object normalizedJson
   ```
 
-- `updateStrategy` (`Boolean|String, optional, defaults to `replace` when
+- `updateStrategy` (`Boolean|String`, optional, defaults to `replace` when
   `GET`; otherwise `false`) - whether or not TpT-Connect should store the
   response data in its Redux store. Available options are: `'replace'` (same as
   `true`), `'append'` (adds the returned resource to the existing resources in
@@ -232,7 +237,7 @@ const tree = (
 );
 
 // Subscribing to our store so we can respond to client only when all of our
-data is ready
+// data is ready
 const unsubscribe = myStore.subscribe(() => {
   if (myStore.getState().connect.isAllFetched) {
     // trigger second render now that we have all data
