@@ -6,6 +6,7 @@
   ],
   "plugins": [
     "add-module-exports",
-    "transform-proto-to-assign"
+    "transform-proto-to-assign",
+    "transform-decorators-legacy"
   ]
 }

@@ -15,7 +15,7 @@ class Provider extends Component {
     this.state = {
       store: store || createStore(
         combineReducers({ connect: connectReducer }),
-        applyMiddleware(apiMiddleware)
+        applyMiddleware(apiMiddleware({}))
       ),
       options
     };

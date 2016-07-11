@@ -1,4 +1,4 @@
-export connect from './components/connect';
+export defineResources from './components/define-resources';
 export ConnectProvider from './components/Provider';
 export * from './helpers';
 export { Schema, arrayOf, normalize } from 'normalizr';

@@ -1,5 +1,7 @@
 # TpT-Connect
 
+[![CircleCI](https://circleci.com/gh/TeachersPayTeachers/tpt-connect.svg?style=svg&circle-token=3b926562683e2d1715753c3b9ace315165daa519)](https://circleci.com/gh/TeachersPayTeachers/tpt-connect)
+
 TpT-Connect is an extension to [Redux](https://github.com/reactjs/redux) which
 creates a simple interface for components' data fetching.
 
@@ -29,6 +31,7 @@ Create your Redux store with the `tpt-connect`'s reducer and middleware:
 
 ```JavaScript
 import { createStore, combineReducers, applyMiddleware } from 'redux';
+import { Provider } from 'react-redux';
 import { connectReducer, connectMiddleware } from '@teachers/tpt-connect';
 
 const store =
@@ -38,7 +41,7 @@ const store =
   }), optionalInitialState, applyMiddleware(connectMiddleware));
 
 render() {
-  <Provider store={store}>
+  <Provider store={ store }>
     <RootComponent />
   </Provider>
 }
@@ -47,14 +50,11 @@ render() {
 #### And in your components throughout the app:
 
 ```JavaScript
-import { connect, Schema } from '@teachers/tpt-connect';
+import { defineResources, Schema, arrayOf } from '@teachers/tpt-connect';
 
 class User extends Component {
   static propTypes = {
-    user: PropTypes.object,
-    deleteUser: PropTypes.object,
-    fetchResource: PropTypes.func,
-    resources: PropTypes.object
+    user: PropTypes.object
   };
 
   renderDeleteNotification() {
@@ -64,48 +64,88 @@ class User extends Component {
   }
 
   render() {
-    const { user, fetchResource, resources: { deleteUser } } = this.props;
+    const { user, followers } = this.props;
 
     return (
       <div>
-        {deleteUser.meta.isSuccess && this.renderDeleteNotification()}
-        <p>Name: {user.name}</p>
-        <p>Deleted: {user.isDeleted}</p>
-        <button onClick={() => { fetchResource(deleteUser) }}>
+        { user.value.isDeleted && this.renderDeleteNotification() }
+        <p>Name: { user.value.name }</p>
+        <p>Deleted: { user.value.isDeleted }</p>
+
+        <button onClick={ user.delete }}>
           DELETE USER
         </button>
+
+        <button onClick={ followers.fetch }>
+          Load User Followers
+        </button>
+
+        <div>
+          { followers.value.map((follower) =>
+            <div>
+              <p>{ follower.name }</p>
+              <button onClick={ () => followers.delete(follower.id) }>Remove Follower</button>
+            </div>
+          ) }
+        </div>
       </div>
     );
   }
 }
 
-exports default connect((state, ownProps) => {
-  const userSchema = new Schema('user');
+exports default defineResources((state, ownProps) => {
+  const usersSchema = new Schema('users');
+
+  // this will pull out users if we got them nested under `followers` with the
+  // initial user request
+  usersSchema.define({
+    followers: arrayOf(usersSchema)
+  });
 
   return {
-    resources: { // Resource defintions
-      user: {
-        schema: userSchema,
-        url: `http://tpt.com/users/${ownProps.userId}`
-      },
-      deleteUser: {
-        method: 'DELETE',
-        schema: userSchema,
-        url: `http://tpt.com/users/${ownProps.userId}`
+    user: {
+      schema: usersSchema,
+      url: `http://tpt.com/users/${ownProps.userId}`,
+      actions: {
+        delete: {
+          method: 'DELETE'
+        },
+        update: (newProps) => ({
+          method: 'PATCH',
+          updateStrategy: 'replace', // will replace the current user with the returned resource
+          body: {
+            id: ownProps.userId,
+            lastName: newProps.lastName
+          }
+        })
       }
-    }
+    },
 
+    followers: {
+      schema: arrayOf(usersSchema), // handling same resource schema
+      url: `http://tpt.com/users/${ownProps.userId}/followers`,
+      auto: false,
+      actions: {
+        create: (params) => ({
+          method: 'POST',
+          updateStrategy: 'append', // will update the store with the additional follower ID
+          body: {
+            firstName: params.firstName,
+            lastName: params.lastName
+          }
+        }),
+        delete: (followerId) => ({
+          method: 'DELETE',
+          updateStrategy: 'remove', // will remove the returned id from our follower IDs
+          url: `http://tpt.com/users/${ownProps.userId}/followers/${followerId}`
+        })
+      }
+    },
+
+    cat: 
   };
 })(User);
 ```
-
-The aforementioned `connect` function is an extension to
-[React-Redux](https://github.com/reactjs/react-redux)'s method and therefore it
-offers all of the functionality the Redux method does.
-
-The only additions are the `resources` object which lists definitions for the
-resources required for the component, and the `fetchResource` method which
-dispatches a request action.
 
 These are the options each resource definition takes:
 
@@ -115,10 +155,13 @@ These are the options each resource definition takes:
   changed (ie URL is dependent on `props.id` and it changes after a client
   action).
 
-- `schema` (`Schema`, required) - an instance of
+- `schema` (`Schema|String`, optional) - an instance of
   [normalizr](://github.com/gaearon/normalizr)'s `Schema` used for TpT-Connect
   to infer how the resource returned to be stored in the global state for
-  future use.
+  future use. If a string is given, TpT-Connect will convert it to a simple
+  normalizr Schema with the string as the key. If Schema is not provided,
+  TpT-Connect will not attempt to normalize any of the data returned from the
+  server.
 
 - `url` (`String`, required) - a complete url of the endpoint
 
@@ -127,7 +170,7 @@ These are the options each resource definition takes:
   are hardcoded in the URL, TpT-Connect will not be able to normalize them and
   store the resource for future use by other components.
 
-- `method` (`Object`, optional, defaults to `GET`) - the request's method to be
+- `method` (`String`, optional, defaults to `GET`) - the request's method to be
   used.
 
 - `headers` (`Object`, optional, defaults to `{ 'Content-Type':
@@ -153,6 +196,62 @@ These are the options each resource definition takes:
   normalize(Object json, Schema schema, [Object options]) : Object normalizedJson
   ```
 
+- `updateStrategy` (`Boolean|String`, optional, defaults to `replace` when
+  `GET`; otherwise `false`) - whether or not TpT-Connect should store the
+  response data in its Redux store. Available options are: `'replace'` (same as
+  `true`), `'append'` (adds the returned resource to the existing resources in
+  the state), and `'remove'` (removes the returned resources from the resources
+  in the state), or `false` to not store at all.
+
+- `debounce` (`Number`, optional) - number of milliseconds TpT-Connect should
+  debounce subsequent requests by for this resource definition. For example,
+  this feature would be useful when used to fetch search results as the user
+  types.
+
+- `actions` (`Object`, optional) - an object defining functions, or
+  sub-objects, which are used as sub-resource definitions to request at a later
+  time and will be available on the TpT-Connect resource. Calling an action
+  will execute the defined action and return the promise yielded from the
+  dispatched request. For more information, check out the example above.
+
+  - Built-in actions on all resources:
+    - `fetch` - force fetch the data.
+    - `invalidate` - marks the data as invalid in the store and therefore will
+      not retrieve it from the state anymore.
+    - `prepopulate` - prepopulate the store with a placeholder for the resource
+      until it is fetched successfully.
+
+### Server Rendering
+
+Thanks to TpT-Connect keeping track of its outstanding requests for resources
+in its store, the above example could be easily rendered on the server as well:
+
+```JavaScript
+
+// By setting `isServer`, TpT-Connect knows to fetch even w/out
+// `componentDidMount` which is called only on client
+const tree = (
+  <ConnectProvider isServer store={ myStore }>
+    <RootComponent />
+  </ConnectProvider>
+);
+
+// Subscribing to our store so we can respond to client only when all of our
+// data is ready
+const unsubscribe = myStore.subscribe(() => {
+  if (myStore.getState().connect.isAllFetched) {
+    // trigger second render now that we have all data
+    const html = ReactDOM.renderToStaticMarkup(tree);
+    unsubscribe();
+    res.status(200).send(html);
+  }
+});
+
+// First render to trigger all of TpT-Connect's automatic fetches
+ReactDOM.renderToStaticMarkup(tree);
+
+```
+
 ### Debugging
 
 TpT-Connect uses [debug](https://github.com/visionmedia/debug). In order to
@@ -163,3 +262,6 @@ logging for TpT-Connect, set:
 ```JavaScript
 localStorage.debug = 'tptconnect:*';
 ```
+
+(NOTE: when running on the server, set the env var `DEBUG`)
+
