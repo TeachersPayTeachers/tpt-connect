@@ -5,6 +5,12 @@
 TpT-Connect is an extension to [Redux](https://github.com/reactjs/redux) which
 creates a simple interface for components' data fetching.
 
+TpT-Connect fetches your components' data dependencies on `componentDidMount`
+and `componentDidUpdate` when relevant props are changed so you don't have to
+worry about when and how to fetch your data. It also stores the server's
+returned resources in a normalized way so it can be used later by other
+components with the same dependencies.
+
 ## Install
 
 ```Bash
@@ -13,7 +19,7 @@ $ npm install --save @teachers/tpt-connect
 
 ## Usage
 
-#### As a black box
+#### Option 1: As a black box
 
 ```JavaScript
 import { ConnectProvider } from '@teachers/tpt-connect';
@@ -25,7 +31,7 @@ render() {
 }
 ```
 
-#### As a Redux plugin
+#### Option 2: As a Redux plugin
 
 Create your Redux store with the `tpt-connect`'s reducer and middleware:
 
@@ -47,53 +53,14 @@ render() {
 }
 ```
 
+----
+
 #### And in your components throughout the app:
 
 ```JavaScript
 import { defineResources, Schema, arrayOf } from '@teachers/tpt-connect';
 
-class User extends Component {
-  static propTypes = {
-    user: PropTypes.object
-  };
-
-  renderDeleteNotification() {
-    return (
-      <p>This user is deleted, brah.</p>
-    )
-  }
-
-  render() {
-    const { user, followers } = this.props;
-
-    return (
-      <div>
-        { user.value.isDeleted && this.renderDeleteNotification() }
-        <p>Name: { user.value.name }</p>
-        <p>Deleted: { user.value.isDeleted }</p>
-
-        <button onClick={ user.delete }}>
-          DELETE USER
-        </button>
-
-        <button onClick={ followers.fetch }>
-          Load User Followers
-        </button>
-
-        <div>
-          { followers.value.map((follower) =>
-            <div>
-              <p>{ follower.name }</p>
-              <button onClick={ () => followers.delete(follower.id) }>Remove Follower</button>
-            </div>
-          ) }
-        </div>
-      </div>
-    );
-  }
-}
-
-exports default defineResources((state, ownProps) => {
+@defineResources((state, ownProps) => {
   const usersSchema = new Schema('users');
 
   // this will pull out users if we got them nested under `followers` with the
@@ -140,11 +107,51 @@ exports default defineResources((state, ownProps) => {
           url: `http://tpt.com/users/${ownProps.userId}/followers/${followerId}`
         })
       }
-    },
-
-    cat: 
+    }
   };
-})(User);
+})
+class User extends Component {
+  static propTypes = {
+    user: PropTypes.object
+  };
+
+  renderDeleteNotification() {
+    return (
+      <p>This user is deleted, brah.</p>
+    )
+  }
+
+  render() {
+    const { user, followers } = this.props;
+
+    return (
+      <div>
+        { user.value.isDeleted && this.renderDeleteNotification() }
+        <p>Name: { user.value.name }</p>
+        <p>Deleted: { user.value.isDeleted }</p>
+
+        <button onClick={ user.delete }}>
+          DELETE USER
+        </button>
+
+        <button onClick={ followers.fetch }>
+          Load User Followers
+        </button>
+
+        <div>
+          { followers.value.map((follower) =>
+            <div>
+              <p>{ follower.name }</p>
+              <button onClick={ () => followers.delete(follower.id) }>Remove Follower</button>
+            </div>
+          ) }
+        </div>
+      </div>
+    );
+  }
+}
+
+export default User;
 ```
 
 These are the options each resource definition takes:
@@ -201,7 +208,10 @@ These are the options each resource definition takes:
   response data in its Redux store. Available options are: `'replace'` (same as
   `true`), `'append'` (adds the returned resource to the existing resources in
   the state), and `'remove'` (removes the returned resources from the resources
-  in the state), or `false` to not store at all.
+  in the state), or `false` to not store at all. This options is useful
+  especially when an action returns returns an updated/deleted resource and you
+  want TpT-Connect to update its store w/out having to make additional
+  requests.
 
 - `debounce` (`Number`, optional) - number of milliseconds TpT-Connect should
   debounce subsequent requests by for this resource definition. For example,
@@ -213,6 +223,14 @@ These are the options each resource definition takes:
   time and will be available on the TpT-Connect resource. Calling an action
   will execute the defined action and return the promise yielded from the
   dispatched request. For more information, check out the example above.
+
+  - Action specific properties - generally actions have the same attributes
+    declared above for resource definitions, with a few additional attributes:
+
+    - `refetchAfter` (`Boolean|String`, optional, defaults to `false`) -
+      whether or not TpT-Connect should refetch the resource after the action
+      completes. Set to 'success' to refetch only after successful response or
+      'error' to only refetch after failure.
 
   - Built-in actions on all resources:
     - `fetch` - force fetch the data.

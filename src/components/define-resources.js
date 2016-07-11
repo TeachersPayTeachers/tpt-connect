@@ -139,10 +139,24 @@ export default function defineResources(mapStateToResources) {
               const actionDefinition = {
                 ...resourceDefinition,
                 updateStrategy: false,
+                refetchAfter: false,
                 ...action(...args)
               };
+              const { refetchAfter } = actionDefinition;
               const url = fullUrl(actionDefinition.url, actionDefinition.params);
-              return this.dispatchRequest({ ...actionDefinition, url });
+              return new Promise((resolve, reject) => {
+                return this.dispatchRequest({ ...actionDefinition, url }).then((..._args) => {
+                  if (refetchAfter === 'success' || refetchAfter === true) {
+                    this.dispatchRequest(resourceDefinition);
+                  }
+                  return resolve(..._args);
+                }).catch((..._args) => {
+                  if (refetchAfter === 'error' || refetchAfter === true) {
+                    this.dispatchRequest(resourceDefinition);
+                  }
+                  return reject(..._args);
+                });
+              });
             }
           };
         }, {});

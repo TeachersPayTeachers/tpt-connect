@@ -417,6 +417,30 @@ describe('tpt-connect', () => {
   });
 
   describe('resource options', () => {
+    describe('when refetchAfter is set to true', () => {
+      beforeEach(() => {
+        renderComponent(() => ({
+          users: {
+            ...resourceDefinition,
+            actions: {
+              update: (params) => ({
+                params,
+                refetchAfter: true
+              })
+            }
+          }
+        }));
+      });
+
+      it('triggers another fetch for the resource when the action completes', (done) => {
+        domElement._props.users.update();
+        defer(() => {
+          expect(window.fetch.calls.count()).toEqual(3);
+          done();
+        });
+      });
+    });
+
     describe('when updateStrategy is set to "append"', () => {
       beforeEach(() => {
         renderComponent(() => ({
