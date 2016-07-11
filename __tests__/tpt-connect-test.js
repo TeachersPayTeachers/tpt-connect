@@ -2,6 +2,7 @@ import './support/fetch-mock.js';
 import 'babel-polyfill';
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
+import { renderToStaticMarkup } from 'react-dom/server';
 import TestUtils from 'react/lib/ReactTestUtils';
 import { Provider } from 'react-redux';
 import { createStore, combineReducers, applyMiddleware } from 'redux';
@@ -74,8 +75,6 @@ describe('tpt-connect', () => {
       }));
     });
   });
-
-  // TODO: add test cases for when resource is not indexable (no key)
 
   it('creates its own store when not provided one', () => {
     provider = TestUtils.renderIntoDocument(
@@ -510,8 +509,40 @@ describe('tpt-connect', () => {
   });
 
   describe('when running on server', () => {
+    function renderOnServer(mappingFunc) {
+      mappingFunc || (mappingFunc = () => ({
+        user: resourceDefinition
+      }));
+
+      const NewComponent = defineResources(mappingFunc)(_Component);
+      renderToStaticMarkup(
+        <ConnectProvider isServer store={ store }>
+          <NewComponent />
+        </ConnectProvider>
+      );
+    }
+
+    it('fetches resources on render instead of on componentDidMount', (done) => {
+      renderOnServer();
+      defer(() => {
+        expect(window.fetch.calls.count() > 0).toBe(true);
+        done();
+      });
+    });
+
+    it('doesnt auto fetch resources w the clientOnly flag on them', (done) => {
+      renderOnServer(() => ({
+        user: { ...resourceDefinition, clientOnly: true }
+      }));
+      defer(() => {
+        expect(window.fetch.calls.count() === 0).toBe(true);
+        done();
+      });
+    });
   });
 
   describe('when running on an already reduxed component', () => {
   });
+
+  describe('when returned resource is non-indexable', () => {});
 });
