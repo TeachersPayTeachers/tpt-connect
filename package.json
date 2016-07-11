@@ -1,6 +1,6 @@
 {
   "name": "@teachers/tpt-connect",
-  "version": "0.2.0-beta.1",
+  "version": "0.2.0-beta.2",
   "description": "TpT-Connect is an extension to [Redux](https://github.com/reactjs/redux) which creates a simple interface for components' data fetching.",
   "main": "lib",
   "engines": {
@@ -10,7 +10,7 @@
   "scripts": {
     "start": "webpack-dev-server --config webpack.dev.config.js --hot",
     "test": "karma start",
-    "test-jenkins": "mkdir logs; karma start --single-run=true",
+    "test-ci": "mkdir logs; karma start --single-run=true",
     "lint": "eslint src",
     "build": "babel src -d lib",
     "coverage-report": "open `pwd`/coverage/lcov-report/index.html",

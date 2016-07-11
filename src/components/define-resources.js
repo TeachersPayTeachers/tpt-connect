@@ -62,7 +62,7 @@ export default function defineResources(mapStateToResources) {
       }
 
       get serverResources() {
-        return this.resources.filter((resource) => !resource.clientOnly);
+        return this.resources.filter((resource) => !resource.definition.clientOnly);
       }
 
       loadResources(resources) {
@@ -85,7 +85,7 @@ export default function defineResources(mapStateToResources) {
 
       // TODO: should get only relevant keys from props
       updateOptions() {
-        this.options = { ...this.props, ...(this.context.options || {}) };
+        this.options = { ...(this.context.options || {}), ...this.props };
       }
 
       updateDispatchers() {
