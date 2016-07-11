@@ -131,7 +131,7 @@ export default function defineResources(mapStateToResources) {
         return Object.keys(resourceActions).reduce((_actions, actionKey) => {
           const action = typeof resourceActions[actionKey] === 'function'
             ? resourceActions[actionKey]
-            : () => [actionKey];
+            : () => resourceActions[actionKey];
 
           return {
             ..._actions,
