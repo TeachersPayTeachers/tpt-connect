@@ -1,6 +1,6 @@
 {
   "name": "@teachers/tpt-connect",
-  "version": "0.2.0-beta.2",
+  "version": "0.2.0-beta.3",
   "description": "TpT-Connect is an extension to [Redux](https://github.com/reactjs/redux) which creates a simple interface for components' data fetching.",
   "main": "lib",
   "engines": {
@@ -71,11 +71,11 @@
   },
   "dependencies": {
     "hoist-non-react-statics": "^1.2.0",
-    "invariant": "2.2.1",
-    "lodash.mergewith": "^4.4.0",
-    "normalize-url": "git://github.com/Peleg/normalize-url.git#v1.5.4",
-    "normalizr": "2.0.0",
-    "querystring": "^0.2.0",
+    "invariant": "2.2.x",
+    "lodash.mergewith": "4.4.x",
+    "normalize-url": "1.6.x",
+    "normalizr": "2.0.x",
+    "querystring": "0.2.x",
     "redux-api-middleware": "git://github.com/Peleg/redux-api-middleware.git#8eb5e5adee0ba4e7aa6d1008856d62bc539e89cd",
     "string-hash": "^1.1.0"
   },

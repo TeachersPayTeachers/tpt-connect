@@ -173,7 +173,7 @@ describe('tpt-connect', () => {
           it('still returns the stored data', (done) => {
             [
               'http://url.com',
-              'http://www.url.com',
+              // 'http://www.url.com',
               'http://url.com/',
               'http://url.com?',
               'http://url.com//',
