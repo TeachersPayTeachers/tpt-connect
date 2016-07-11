@@ -136,7 +136,11 @@ export default function defineResources(mapStateToResources) {
           return {
             ..._actions,
             [actionKey]: (...args) => {
-              const actionDefinition = { ...resourceDefinition, ...action(...args) };
+              const actionDefinition = {
+                ...resourceDefinition,
+                updateStrategy: false,
+                ...action(...args)
+              };
               const url = fullUrl(actionDefinition.url, actionDefinition.params);
               return this.dispatchRequest({ ...actionDefinition, url });
             }
