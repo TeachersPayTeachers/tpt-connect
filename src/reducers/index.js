@@ -1,19 +1,19 @@
 import mergeWith from 'lodash.mergewith';
 import { logger } from '../helpers';
 import {
-  CONNECT_INVALIDATE,
-  CONNECT_PREPOPULATE,
-  CONNECT_REQUEST,
-  CONNECT_SUCCESS,
-  CONNECT_FAILURE
+  TPT_CONNECT_INVALIDATE,
+  TPT_CONNECT_PREPOPULATE,
+  TPT_CONNECT_REQUEST,
+  TPT_CONNECT_SUCCESS,
+  TPT_CONNECT_FAILURE
 } from '../actions';
 
 const TPT_CONNECT_TYPES = [
-  CONNECT_INVALIDATE,
-  CONNECT_PREPOPULATE,
-  CONNECT_REQUEST,
-  CONNECT_SUCCESS,
-  CONNECT_FAILURE
+  TPT_CONNECT_INVALIDATE,
+  TPT_CONNECT_PREPOPULATE,
+  TPT_CONNECT_REQUEST,
+  TPT_CONNECT_SUCCESS,
+  TPT_CONNECT_FAILURE
 ];
 
 export default function connectReducer(state = {}, { type, error, payload }) {
@@ -21,12 +21,12 @@ export default function connectReducer(state = {}, { type, error, payload }) {
 
   let fetchesCount = state.fetchesCount || 0;
 
-  if (error && type !== CONNECT_FAILURE) { // internal error
+  if (error && type !== TPT_CONNECT_FAILURE) { // internal error
     fetchesCount--;
     logger.error(payload);
-  } else if (type === CONNECT_FAILURE || type === CONNECT_SUCCESS) {
+  } else if (type === TPT_CONNECT_FAILURE || type === TPT_CONNECT_SUCCESS) {
     fetchesCount--;
-  } else if (type === CONNECT_PREPOPULATE) {
+  } else if (type === TPT_CONNECT_PREPOPULATE) {
     fetchesCount++;
   }
 

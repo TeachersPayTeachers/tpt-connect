@@ -390,6 +390,16 @@ describe('tpt-connect', () => {
       expect(domElement._props.users.create).toEqual(jasmine.any(Function));
     });
 
+    it('returns a promise which has the response and the parsed data when resolved', (done) => {
+      const promise = domElement._props.users.create();
+      expect(promise).toEqual(jasmine.any(Promise));
+      promise.then(({ data, response }) => {
+        expect(response).toEqual(jasmine.any(Response));
+        expect(data).toEqual(jasmine.any(Object));
+        done();
+      });
+    });
+
     it('inherits missing attributes from its parent resource', (done) => {
       domElement._props.users.create({ name: 'Peleg' });
       defer(() => {
