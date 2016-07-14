@@ -56,8 +56,7 @@ export function findInState(state, resourceDefinition) {
   const { isArray, defaultValue } = resourceDefinition;
   const key = schemaKey(resourceDefinition);
   const resourceMap = paramsToResources[resourceDefinition.requestKey];
-  const resourceKeys = resourceMap &&
-    paramsToResources[resourceDefinition.requestKey].data[key];
+  const resourceKeys = resourceMap && resourceMap.data[key];
 
   if (!resourceKeys || resourceMap.meta.didInvalidate) {
     return false;

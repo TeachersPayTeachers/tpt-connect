@@ -568,5 +568,36 @@ describe('tpt-connect', () => {
   describe('when running on an already reduxed component', () => {
   });
 
-  describe('when returned resource is non-indexable', () => {});
+  describe('when returned resource is non-indexable (no ID)', () => {
+    beforeEach(() => {
+      window.fetch.and.callFake(() => {
+        return Promise.resolve(new Response(JSON.stringify({ name: 'peleg' }), {
+          headers: { 'Content-Type': 'application/json' },
+          status: 200
+        }));
+      });
+    });
+
+    it('stores the resource directly under paramsToResources', (done) => {
+      renderComponent(() => ({ user: resourceDefinition }));
+      defer(() => {
+        expect(domElement._props.user.value.name).toBeDefined();
+        const state = store.getState().connect;
+        const [requestKey] = Object.keys(state.paramsToResources);
+        expect(state.paramsToResources[requestKey].data.user.length).toEqual(1);
+        expect(state.resources.user).toBeUndefined();
+        done();
+      });
+    });
+  });
+
+  describe('when schema is not provided', () => {
+    it('stores the resource directly under paramsToResources since it cannot index it', (done) => {
+      renderComponent(() => ({ user: { ...resourceDefinition, schema: undefined } }));
+      defer(() => {
+        expect(domElement._props.user.value.id).toBeDefined();
+        done();
+      });
+    });
+  });
 });

@@ -12,24 +12,30 @@ export function computePayload(resourceDefinition, meta, data, response) {
   const { schema, normalize = _normalize, updateStrategy } = resourceDefinition;
   if (!updateStrategy) { return {}; }
 
-  const { entities = {}, result = [] } = schema && typeof data === 'object'
-    ? normalize(data, schema)
-    : {};
-
-  // if data is not indexable just wrap it in array and store directly under paramsToResources
-  data =
-    data && (typeof data === 'string' || result.length === 0 && Object.keys(entities).length !== 0)
-    ? [data]
-    : [].concat(result);
+  // TODO: refactor this...
+  let indexedEntities = {};
+  let indices = [];
+  if (schema && typeof data === 'object') { // try to normalize & index
+    let { entities = {}, result = [] } = normalize(data, schema);
+    result = [].concat(result); // normalizr returns single id for non-arrays
+    if (result.filter((id) => id).length === 0 && Object.keys(entities).length !== 0) {
+      indices = [data]; // non-indexable
+    } else {
+      indices = result;
+      indexedEntities = entities;
+    }
+  } else if (data) { // non-indexable
+    indices = [data];
+  }
 
   return {
     updateStrategy, // so reducer can decide if to append paramsToResources or replace
     lastResponse: typeof window === 'undefined' && response, // TODO: this is shit
-    resources: result.length !== 0 ? entities : {},
+    resources: indexedEntities,
     paramsToResources: {
       [resourceDefinition.requestKey]: {
         meta,
-        data: { [schemaKey(resourceDefinition)]: data }
+        data: { [schemaKey(resourceDefinition)]: indices }
       }
     }
   };
