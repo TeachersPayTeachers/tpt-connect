@@ -1,9 +1,8 @@
 import { PropTypes } from 'react';
 import { bindActionCreators } from 'redux';
 import * as actions from '../actions';
-import { normalizeResourceDefinition, findInState, extendFunction } from '../helpers';
+import { fullUrl, findInState, normalizeResourceDefinition, extendFunction } from '../helpers';
 import hoistStatics from 'hoist-non-react-statics';
-import TptConnectResource from '../lib/TptConnectResource';
 
 export default function defineResources(mapStateToResources) {
   return (WrappedComponent) => {
@@ -92,11 +91,18 @@ export default function defineResources(mapStateToResources) {
       updateDispatchers() {
         const { onSuccess, onError, onRequest } = this.options;
 
-        const { dispatchRequest } = this.dispatchers =
-          bindActionCreators(actions, this.store.dispatch);
+        const {
+          invalidateResource,
+          prepopulateResource,
+          dispatchRequest
+        } = bindActionCreators(actions, this.store.dispatch);
+
+        this.invalidateResource = invalidateResource;
+
+        this.prepopulateResource = prepopulateResource;
 
         // wrapping in a function returning a normal promise
-        this.dispatchers.dispatchRequest = (definition) => {
+        this.dispatchRequest = (definition) => {
           const promise = new Promise((resolve, reject) => {
             dispatchRequest(definition, {
               onSuccess: extendFunction(onSuccess, resolve),
@@ -120,6 +126,42 @@ export default function defineResources(mapStateToResources) {
         return { ...stateProps, ...resourceProps };
       }
 
+      computeResourceActions(resourceDefinition) {
+        const { actions: resourceActions } = resourceDefinition;
+        return Object.keys(resourceActions).reduce((_actions, actionKey) => {
+          const action = typeof resourceActions[actionKey] === 'function'
+            ? resourceActions[actionKey]
+            : () => resourceActions[actionKey];
+
+          return {
+            ..._actions,
+            [actionKey]: (...args) => {
+              const actionDefinition = {
+                ...resourceDefinition,
+                updateStrategy: false,
+                refetchAfter: false,
+                ...action(...args)
+              };
+              const { refetchAfter } = actionDefinition;
+              const url = fullUrl(actionDefinition.url, actionDefinition.params);
+              return new Promise((resolve, reject) => {
+                return this.dispatchRequest({ ...actionDefinition, url }).then((..._args) => {
+                  if (refetchAfter === 'success' || refetchAfter === true) {
+                    this.dispatchRequest(resourceDefinition);
+                  }
+                  return resolve(..._args);
+                }).catch((..._args) => {
+                  if (refetchAfter === 'error' || refetchAfter === true) {
+                    this.dispatchRequest(resourceDefinition);
+                  }
+                  return reject(..._args);
+                });
+              });
+            }
+          };
+        }, {});
+      }
+
       /**
        * Computes our resources. Only called when redux thinks state props
        * update is in order.
@@ -130,13 +172,34 @@ export default function defineResources(mapStateToResources) {
         const stateProps = this.stateProps || {};
 
         return Object.keys(resourceDefinitions).reduce((resourceProps, key) => {
+          const oldResource = stateProps[key] || {};
           const definition = normalizeResourceDefinition(resourceDefinitions[key]);
-          const old = stateProps[key];
-          const current = { definition, ...(findInState(state, definition) || {}) };
+
+          // used to figure out if we should refetch our resource
+          const _isDirty = oldResource.definition &&
+            (definition.auto && !oldResource.definition.auto ||
+            definition.requestKey !== oldResource.definition.requestKey);
+
+          const {
+            meta = {},
+            value = definition.defaultValue
+          } = findInState(state, definition) || oldResource;
 
           return {
             ...resourceProps,
-            [key]: new TptConnectResource(current, old, this.dispatchers)
+            [key]: {
+              definition,
+              meta: {
+                ...meta,
+                _isDirty,
+                _timerId: oldResource.meta && oldResource.meta._timerId
+              },
+              value,
+              invalidate: () => this.invalidateResource(definition),
+              prepopulate: () => this.prepopulateResource(definition),
+              fetch: () => this.dispatchRequest(definition),
+              ...this.computeResourceActions(definition)
+            }
           };
         }, {});
       }

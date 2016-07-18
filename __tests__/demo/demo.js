@@ -37,6 +37,7 @@ import {
 class DemoComponent extends Component {
   componentDidMount() {
     const { user } = this.props;
+    user.fetch();
     user.create();
     user.byId(7);
   }

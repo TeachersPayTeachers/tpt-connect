@@ -2,11 +2,11 @@ import { CALL_API } from 'redux-api-middleware';
 import { schemaKey, logger } from '../helpers';
 import { normalize as _normalize } from 'normalizr';
 
-export const TPT_CONNECT_REQUEST = 'TPT_CONNECT_REQUEST';
-export const TPT_CONNECT_SUCCESS = 'TPT_CONNECT_SUCCESS';
-export const TPT_CONNECT_FAILURE = 'TPT_CONNECT_FAILURE';
-export const TPT_CONNECT_PREPOPULATE = 'TPT_CONNECT_PREPOPULATE';
-export const TPT_CONNECT_INVALIDATE = 'TPT_CONNECT_INVALIDATE';
+export const CONNECT_REQUEST = 'CONNECT_REQUEST';
+export const CONNECT_SUCCESS = 'CONNECT_SUCCESS';
+export const CONNECT_FAILURE = 'CONNECT_FAILURE';
+export const CONNECT_PREPOPULATE = 'CONNECT_PREPOPULATE';
+export const CONNECT_INVALIDATE = 'CONNECT_INVALIDATE';
 
 export function computePayload(resourceDefinition, meta, data, response) {
   const { schema, normalize = _normalize, updateStrategy } = resourceDefinition;
@@ -86,7 +86,7 @@ function onResponse(resourceDefinition, meta, opts) {
 export function invalidateResource(resourceDefinition) {
   logger.info('Invalidating resource:', resourceDefinition);
   return {
-    type: TPT_CONNECT_INVALIDATE,
+    type: CONNECT_INVALIDATE,
     payload: computePayload(resourceDefinition, {
       didInvalidate: true
     })
@@ -95,7 +95,7 @@ export function invalidateResource(resourceDefinition) {
 
 export function prepopulateResource(resourceDefinition) {
   return {
-    type: TPT_CONNECT_PREPOPULATE,
+    type: CONNECT_PREPOPULATE,
     payload: computePayload(resourceDefinition, {
       isFetching: false,
       isError: false,
@@ -117,7 +117,7 @@ export function dispatchRequest(resourceDefinition, options) {
       endpoint,
       body: body || undefined,
       types: [{
-        type: TPT_CONNECT_REQUEST,
+        type: CONNECT_REQUEST,
         payload: computePayload(resourceDefinition, {
           isFetching: true,
           isError: false,
@@ -125,13 +125,13 @@ export function dispatchRequest(resourceDefinition, options) {
           lastUpdated: null
         })
       }, {
-        type: TPT_CONNECT_SUCCESS,
+        type: CONNECT_SUCCESS,
         payload: onResponse(resourceDefinition, {
           isError: false,
           isSuccess: true
         }, options)
       }, {
-        type: TPT_CONNECT_FAILURE,
+        type: CONNECT_FAILURE,
         payload: onResponse(resourceDefinition, {
           isError: true,
           isSuccess: false
