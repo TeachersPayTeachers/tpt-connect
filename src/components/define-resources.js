@@ -1,4 +1,4 @@
-import { PropTypes } from 'react';
+import { PropTypes, cloneElement } from 'react';
 import { bindActionCreators } from 'redux';
 import * as actions from '../actions';
 import { fullUrl, findInState, normalizeResourceDefinition, extendFunction } from '../helpers';
@@ -18,62 +18,43 @@ export default function defineResources(mapStateToResources) {
         options: PropTypes.object
       };
 
-      /**
-       * @override
-       */
       constructor(...args) {
         super(...args);
-        this.updateOptions();
-        this.updateDispatchers();
-        this.resources = [];
-        this._isFirstRender = true;
+        this.resourceProps = {};
+        this.allResources = [];
+        this.updateOptionsIfNeeded();
       }
 
-      /**
-       * @override
-       */
-      componentDidMount() {
-        super.componentDidMount();
-        this.loadResources(this.resources);
-      }
-
-      /**
-       * @override
-       */
       componentWillReceiveProps(...args) {
         super.componentWillReceiveProps(...args);
+        this.updateOptionsIfNeeded();
+      }
 
-        if (this.haveOwnPropsChanged) {
-          this.updateOptions();
-          this.updateDispatchers();
-        }
+      componentWillMount() {
+        const { isServer } = this.options;
+        this.haveResourcePropsChanged = this.updateResourcePropsIfNeeded();
+        this.fetchResources(isServer ? this.serverResources : this.allResources);
+      }
+
+      componentWillUpdate() {
+        super.componentWillUpdate && super.componentWillUpdate();
+        this.haveResourcePropsChanged = this.updateResourcePropsIfNeeded();
+        this.fetchResources(this.changedResources);
       }
 
       componentDidUpdate() {
-        this.loadResources(this.changedResources);
+        this.haveResourcePropsChanged = this.updateResourcePropsIfNeeded();
+        this.fetchResources(this.changedResources);
       }
 
-      /**
-       * @returns {array} resources that need to be fetched again (either the
-       * requestKey changed, or they're now `auto` after being not)
-       */
-      get changedResources() {
-        return this.resources.filter((resource) => resource.meta._isDirty);
-      }
-
-      get serverResources() {
-        return this.resources.filter((resource) => !resource.definition.clientOnly);
-      }
-
-      loadResources(resources) {
+      fetchResources(resources) {
         resources.forEach((resource) => {
           const definition = resource.definition;
-          if (definition.auto && !findInState(this.store.getState(), definition)) {
+          if (definition.auto && !findInState(this.state.storeState, definition)) {
             resource.prepopulate();
-            // avoid debouncing on first render's fetch
-            if (resource.meta._isDirty && definition.debounce !== undefined) {
-              clearTimeout(resource.meta._timerId);
-              resource.meta._timerId = setTimeout(() => {
+            if (definition.debounce !== undefined) {
+              clearTimeout(resource.definition._timerId);
+              resource.definition._timerId = setTimeout(() => {
                 resource.fetch();
               }, definition.debounce);
             } else {
@@ -83,9 +64,12 @@ export default function defineResources(mapStateToResources) {
         });
       }
 
-      // TODO: should get only relevant keys from props
-      updateOptions() {
-        this.options = { ...(this.context.options || {}), ...this.props };
+      updateOptionsIfNeeded() {
+        if (!this.haveOwnPropsChanged) { return false; }
+        const { isServer, onRequest, onSuccess, onError } = this.props;
+        this.options = { isServer, onRequest, onSuccess, onError, ...this.context.options };
+        this.updateDispatchers();
+        return true;
       }
 
       updateDispatchers() {
@@ -97,8 +81,8 @@ export default function defineResources(mapStateToResources) {
           dispatchRequest
         } = bindActionCreators(actions, this.store.dispatch);
 
+        // TODO no need to update these two
         this.invalidateResource = invalidateResource;
-
         this.prepopulateResource = prepopulateResource;
 
         // wrapping in a function returning a normal promise
@@ -114,16 +98,55 @@ export default function defineResources(mapStateToResources) {
         };
       }
 
-      /**
-       * Computes props from redux's original mapping function merged w/ our
-       * mapping function.
-       * @override
-       */
-      computeStateProps(store, props) {
-        const stateProps = super.computeStateProps(store, props);
-        const resourceProps = this.computeResourceProps(store, props);
-        this.resources = Object.keys(resourceProps).map((k) => resourceProps[k]);
-        return { ...stateProps, ...resourceProps };
+      updateResourcePropsIfNeeded() {
+        if (!(this.haveOwnPropsChanged || this.hasStoreStateChanged)) { return false; }
+
+        this.resourceProps = this.computeResourceProps();
+
+        this.allResources = Object.keys(this.resourceProps).map((k) => this.resourceProps[k]);
+
+        this.changedResources =
+          this.allResources.filter(({ definition }) => definition._isDirty);
+
+        this.serverResources =
+          this.allResources.filter(({ definition }) => !definition.clientOnly);
+
+        return true;
+      }
+
+      computeResourceProps() {
+        const resourceDefinitions = mapStateToResources(this.state.storeState, this.props);
+        return Object.keys(resourceDefinitions).reduce((resourceProps, key) => {
+          const oldResource = this.resourceProps[key] || {};
+          const definition = normalizeResourceDefinition(resourceDefinitions[key]);
+
+          // used to figure out if we should refetch our resource
+          const _isDirty = oldResource.definition &&
+            (definition.auto && !oldResource.definition.auto ||
+            definition.requestKey !== oldResource.definition.requestKey);
+
+          const {
+            meta = {},
+            value = definition.defaultValue
+          } = findInState(this.state.storeState, definition) || oldResource;
+
+          return {
+            ...resourceProps,
+            [key]: {
+              definition: {
+                ...definition,
+                _isDirty,
+                _timerId: oldResource.definition && oldResource.definition._timerId
+              },
+              meta,
+              value,
+              invalidate: () => this.invalidateResource(definition),
+              prepopulate: () => this.prepopulateResource(definition),
+              fetch: () => this.dispatchRequest(definition),
+              ...this.computeResourceActions(definition)
+            }
+          };
+        }, {});
       }
 
       computeResourceActions(resourceDefinition) {
@@ -144,6 +167,7 @@ export default function defineResources(mapStateToResources) {
               };
               const { refetchAfter } = actionDefinition;
               const url = fullUrl(actionDefinition.url, actionDefinition.params);
+              // TODO:
               return new Promise((resolve, reject) => {
                 return this.dispatchRequest({ ...actionDefinition, url }).then((..._args) => {
                   if (refetchAfter === 'success' || refetchAfter === true) {
@@ -163,59 +187,26 @@ export default function defineResources(mapStateToResources) {
       }
 
       /**
-       * Computes our resources. Only called when redux thinks state props
-       * update is in order.
-       */
-      computeResourceProps(store, props) {
-        const state = store.getState();
-        const resourceDefinitions = mapStateToResources(state, props);
-        const stateProps = this.stateProps || {};
-
-        return Object.keys(resourceDefinitions).reduce((resourceProps, key) => {
-          const oldResource = stateProps[key] || {};
-          const definition = normalizeResourceDefinition(resourceDefinitions[key]);
-
-          // used to figure out if we should refetch our resource
-          const _isDirty = oldResource.definition &&
-            (definition.auto && !oldResource.definition.auto ||
-            definition.requestKey !== oldResource.definition.requestKey);
-
-          const {
-            meta = {},
-            value = definition.defaultValue
-          } = findInState(state, definition) || oldResource;
-
-          return {
-            ...resourceProps,
-            [key]: {
-              definition,
-              meta: {
-                ...meta,
-                _isDirty,
-                _timerId: oldResource.meta && oldResource.meta._timerId
-              },
-              value,
-              invalidate: () => this.invalidateResource(definition),
-              prepopulate: () => this.prepopulateResource(definition),
-              fetch: () => this.dispatchRequest(definition),
-              ...this.computeResourceActions(definition)
-            }
-          };
-        }, {});
-      }
-
-      /**
        * @override
        */
       render() {
-        const { isServer } = this.options;
+        const haveOwnPropsChanged = this.haveOwnPropsChanged; // redux render clears it
+        const hasStoreStateChanged = this.hasStoreStateChanged;
+
         this.renderedElement = super.render();
 
-        // componentDidMount isnt getting called on server
-        if (isServer && this._isFirstRender) {
-          this.loadResources(this.serverResources);
-          this._isFirstRender = false;
+        this.haveOwnPropsChanged = haveOwnPropsChanged;
+        this.hasStoreStateChanged = hasStoreStateChanged;
+
+        this.haveResourcePropsChanged = this.updateResourcePropsIfNeeded();
+
+        if (this.haveResourcePropsChanged) {
+          this.renderedElement = cloneElement(this.renderedElement, this.resourceProps);
         }
+
+        this.haveResourcePropsChanged = false;
+        this.haveOwnPropsChanged = false;
+        this.hasStoreStateChanged = false;
 
         return this.renderedElement;
       }

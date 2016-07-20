@@ -168,11 +168,11 @@ describe('tpt-connect', () => {
           });
         });
 
-        // TODO: this fails because we're not stripping WWW anymore (see helpers.fullUrl)
         describe('when the url is not normalized', () => {
           it('still returns the stored data', (done) => {
             [
               'http://url.com',
+              // TODO: this fails because we're not stripping WWW anymore (see helpers.fullUrl)
               // 'http://www.url.com',
               'http://url.com/',
               'http://url.com?',
@@ -400,6 +400,40 @@ describe('tpt-connect', () => {
       });
     });
 
+    describe('successfull response', () => {
+      it('returns a promise with the response and data when resolved', (done) => {
+        const promise = domElement._props.users.create();
+        expect(promise).toEqual(jasmine.any(Promise));
+        promise.then(({ data, response }) => {
+          expect(data).toBeDefined();
+          expect(response).toBeDefined();
+          done();
+        });
+      });
+    });
+
+    describe('unsuccessfull response', () => {
+      beforeEach(() => {
+        window.fetch.and.callFake(() => {
+          return Promise.resolve(new Response(JSON.stringify({
+            id: 3,
+            error: 'This is an error'
+          }), {
+            headers: { 'Content-Type': 'application/json' },
+            status: 404
+          }));
+        });
+      });
+
+      it('returns a promise with the response and data when resolved', (done) => {
+        domElement._props.users.create().catch(({ error, response }) => {
+          expect(error).toBeDefined();
+          expect(response).toBeDefined();
+          done();
+        });
+      });
+    });
+
     describe('when store is set', () => {
       it('stores under the parents requestKey', (done) => {
         defer(() => {
@@ -470,6 +504,7 @@ describe('tpt-connect', () => {
         });
       });
     });
+
     describe('when updateStrategy is set to "remove"', () => {
       beforeEach(() => {
         renderComponent(() => ({
@@ -499,6 +534,7 @@ describe('tpt-connect', () => {
         });
       });
     });
+
     describe('when updateStrategy is set to "replace"', () => {
       beforeEach(() => {
         renderComponent(() => ({
@@ -528,6 +564,7 @@ describe('tpt-connect', () => {
       });
     });
 
+    // TODO:
     describe('when debounce is set', () => {
     });
   });
@@ -565,9 +602,6 @@ describe('tpt-connect', () => {
     });
   });
 
-  describe('when running on an already reduxed component', () => {
-  });
-
   describe('when returned resource is non-indexable (no ID)', () => {
     beforeEach(() => {
       window.fetch.and.callFake(() => {
@@ -599,5 +633,9 @@ describe('tpt-connect', () => {
         done();
       });
     });
+  });
+
+  // TODO:
+  describe('when running on an already reduxed component', () => {
   });
 });

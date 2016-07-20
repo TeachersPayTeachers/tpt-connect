@@ -57,15 +57,21 @@ function onResponse(resourceDefinition, meta, opts) {
     return response[type]().then((data) => {
       if (!response.ok) { throw new Error(JSON.stringify(data)); }
       logger.info('Fetched resource successfully:', resourceDefinition);
+
+      // deferring so callbacks are called only after store is updated
       opts.onSuccess && setTimeout(() => {
         opts.onSuccess({ data, response });
       });
+
       return computePayload(resourceDefinition, meta, data);
     }).catch((err) => {
       logger.error('Failed to fetch resource:', resourceDefinition, err);
+
+      // deferring so callbacks are called only after store is updated
       opts.onError && setTimeout(() => {
         opts.onError({ error: err, response });
       });
+
       meta = {
         ...meta,
         isSuccess: false,
