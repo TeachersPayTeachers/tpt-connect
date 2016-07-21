@@ -25,25 +25,14 @@ export default function defineResources(mapStateToResources) {
         this.updateOptionsIfNeeded();
       }
 
-      componentWillReceiveProps(...args) {
-        super.componentWillReceiveProps(...args);
-        this.updateOptionsIfNeeded();
-      }
-
       componentWillMount() {
         const { isServer } = this.options;
-        this.haveResourcePropsChanged = this.updateResourcePropsIfNeeded();
+        this.updateResourceProps();
+        // fetch all resources before first render
         this.fetchResources(isServer ? this.serverResources : this.allResources);
       }
 
-      componentWillUpdate() {
-        super.componentWillUpdate && super.componentWillUpdate();
-        this.haveResourcePropsChanged = this.updateResourcePropsIfNeeded();
-        this.fetchResources(this.changedResources);
-      }
-
       componentDidUpdate() {
-        this.haveResourcePropsChanged = this.updateResourcePropsIfNeeded();
         this.fetchResources(this.changedResources);
       }
 
@@ -98,11 +87,10 @@ export default function defineResources(mapStateToResources) {
         };
       }
 
-      updateResourcePropsIfNeeded() {
-        if (!(this.haveOwnPropsChanged || this.hasStoreStateChanged)) { return false; }
-
+      // TODO: change to only update if needed (when either resource definition
+      // or resource value/meta have changed)
+      updateResourceProps() {
         this.resourceProps = this.computeResourceProps();
-
         this.allResources = Object.keys(this.resourceProps).map((k) => this.resourceProps[k]);
 
         this.changedResources =
@@ -167,19 +155,16 @@ export default function defineResources(mapStateToResources) {
               };
               const { refetchAfter } = actionDefinition;
               const url = fullUrl(actionDefinition.url, actionDefinition.params);
-              // TODO:
-              return new Promise((resolve, reject) => {
-                return this.dispatchRequest({ ...actionDefinition, url }).then((..._args) => {
-                  if (refetchAfter === 'success' || refetchAfter === true) {
-                    this.dispatchRequest(resourceDefinition);
-                  }
-                  return resolve(..._args);
-                }).catch((..._args) => {
-                  if (refetchAfter === 'error' || refetchAfter === true) {
-                    this.dispatchRequest(resourceDefinition);
-                  }
-                  return reject(..._args);
-                });
+              return this.dispatchRequest({ ...actionDefinition, url }).then((response) => {
+                if (refetchAfter === 'success' || refetchAfter === true) {
+                  this.dispatchRequest(resourceDefinition);
+                }
+                return Promise.resolve(response);
+              }).catch((err) => {
+                if (refetchAfter === 'error' || refetchAfter === true) {
+                  this.dispatchRequest(resourceDefinition);
+                }
+                return Promise.reject(err);
               });
             }
           };
@@ -190,23 +175,15 @@ export default function defineResources(mapStateToResources) {
        * @override
        */
       render() {
-        const haveOwnPropsChanged = this.haveOwnPropsChanged; // redux render clears it
-        const hasStoreStateChanged = this.hasStoreStateChanged;
+        // redux's render clears both
+        const shouldUpdateResourceProps = this.haveOwnPropsChanged || this.hasStoreStateChanged;
 
         this.renderedElement = super.render();
 
-        this.haveOwnPropsChanged = haveOwnPropsChanged;
-        this.hasStoreStateChanged = hasStoreStateChanged;
-
-        this.haveResourcePropsChanged = this.updateResourcePropsIfNeeded();
-
-        if (this.haveResourcePropsChanged) {
+        if (shouldUpdateResourceProps) {
+          this.updateResourceProps();
           this.renderedElement = cloneElement(this.renderedElement, this.resourceProps);
         }
-
-        this.haveResourcePropsChanged = false;
-        this.haveOwnPropsChanged = false;
-        this.hasStoreStateChanged = false;
 
         return this.renderedElement;
       }

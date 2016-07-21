@@ -52,8 +52,8 @@
     "karma-webpack": "1.7.0",
     "node-sass": "3.4.2",
     "phantomjs": "1.9.19",
-    "react": "0.14.6",
-    "react-dom": "0.14.6",
+    "react": "^15.0.0-0",
+    "react-dom": "^15.0.0-0",
     "react-redux": "^4.4.0",
     "react-transform-hmr": "1.0.1",
     "redux": "^3.3.1",
@@ -64,18 +64,18 @@
     "whatwg-fetch": "^1.0.0"
   },
   "peerDependencies": {
-    "react": "^0.14.6",
-    "react-dom": "^0.14.6",
-    "react-redux": "^4.4.0",
-    "redux": "^3.3.1"
+    "react": "^0.14.0 || ^15.0.0-0",
+    "react-dom": "^0.14.0 || ^15.0.0-0",
+    "redux": "^2.0.0 || ^3.0.0",
+    "react-redux": "^4.4.0"
   },
   "dependencies": {
+    "invariant": "^2.0.0",
     "hoist-non-react-statics": "^1.2.0",
-    "invariant": "2.2.x",
-    "lodash.mergewith": "4.4.x",
-    "normalize-url": "1.6.x",
-    "normalizr": "2.0.x",
-    "querystring": "0.2.x",
+    "lodash.mergewith": "^4.4.0",
+    "normalize-url": "^1.6.0",
+    "normalizr": "^2.0.0",
+    "querystring": "~0.2.0",
     "redux-api-middleware": "git://github.com/Peleg/redux-api-middleware.git#8eb5e5adee0ba4e7aa6d1008856d62bc539e89cd",
     "string-hash": "^1.1.0"
   },
