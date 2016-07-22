@@ -2,14 +2,15 @@
 
 [![CircleCI](https://circleci.com/gh/TeachersPayTeachers/tpt-connect.svg?style=svg&circle-token=3b926562683e2d1715753c3b9ace315165daa519)](https://circleci.com/gh/TeachersPayTeachers/tpt-connect)
 
-TpT-Connect is an extension to [Redux](https://github.com/reactjs/redux) which
-creates a simple interface for components' data fetching.
+TpT-Connect is a [Redux](https://github.com/reactjs/react-redux) extension
+which creates simple interfaces for your React components' to interact with
+your RESTful API.
 
-TpT-Connect fetches your components' data dependencies on `componentDidMount`
-and `componentDidUpdate` when relevant props are changed so you don't have to
-worry about when and how to fetch your data. It also stores the server's
-returned resources in a normalized way so it can be used later by other
-components with the same dependencies.
+TpT-Connect automatically fetches your components' data dependencies on
+`componentWillMount` and `componentDidUpdate` when relevant props are changed
+so you don't have to worry about when and how to fetch your data. To make your
+resources available across multiple components, TpT-Connect normalizes and
+caches your resources in its Redux state.
 
 ## Install
 
@@ -59,85 +60,54 @@ render() {
 
 ```JavaScript
 import { defineResources, Schema, arrayOf } from '@teachers/tpt-connect';
+const userSchema = new Schema('user');
 
-@defineResources((state, ownProps) => {
-  const usersSchema = new Schema('users');
-
-  // this will pull out users if we got them nested under `followers` with the
-  // initial user request
-  usersSchema.define({
-    followers: arrayOf(usersSchema)
-  });
-
-  return {
-    user: {
-      schema: usersSchema,
-      url: `http://tpt.com/users/${ownProps.userId}`,
-      actions: {
-        delete: {
-          method: 'DELETE'
-        },
-        update: (newProps) => ({
-          method: 'PATCH',
-          updateStrategy: 'replace', // will replace the current user with the returned resource
-          body: {
-            id: ownProps.userId,
-            lastName: newProps.lastName
-          }
-        })
-      }
-    },
-
-    followers: {
-      schema: arrayOf(usersSchema), // handling same resource schema
-      url: `http://tpt.com/users/${ownProps.userId}/followers`,
-      auto: false,
-      actions: {
-        create: (params) => ({
-          method: 'POST',
-          updateStrategy: 'append', // will update the store with the additional follower ID
-          body: {
-            firstName: params.firstName,
-            lastName: params.lastName
-          }
-        }),
-        delete: (followerId) => ({
-          method: 'DELETE',
-          updateStrategy: 'remove', // will remove the returned id from our follower IDs
-          url: `http://tpt.com/users/${ownProps.userId}/followers/${followerId}`
-        })
-      }
+@defineResources((state, ownProps) => ({
+  user: {
+    schema: userSchema,
+    url: `http://tpt.com/users/${ownProps.userId}`,
+    actions: {
+      delete: {
+        method: 'DELETE'
+      },
+      update: (newProps) => ({
+        method: 'PATCH',
+        refetchAfter: true,
+        body: {
+          id: ownProps.userId,
+          lastName: newProps.lastName
+        }
+      })
     }
-  };
+  },
+
+  followers: {
+    schema: arrayOf(userSchema), // allows for normalization of users to be stored in one place
+    url: `http://tpt.com/users/${ownProps.userId}/followers`,
+    auto: false,
+    actions: {
+      create: ({ firstName, lastName }) => ({
+        method: 'POST',
+        updateStrategy: 'append', // updates the store with the additional follower ID
+        body: { firstName, lastName }
+      })
+    }
+  }
 })
 class User extends Component {
   static propTypes = {
-    user: PropTypes.object
+    user: PropTypes.object,
+    followers: PropTypes.object
   };
-
-  renderDeleteNotification() {
-    return (
-      <p>This user is deleted, brah.</p>
-    )
-  }
 
   render() {
     const { user, followers } = this.props;
 
     return (
       <div>
-        { user.value.isDeleted && this.renderDeleteNotification() }
-        <p>Name: { user.value.name }</p>
-        <p>Deleted: { user.value.isDeleted }</p>
-
-        <button onClick={ user.delete }}>
-          DELETE USER
-        </button>
-
-        <button onClick={ followers.fetch }>
-          Load User Followers
-        </button>
-
+        <p>NAME: { user.value.name }</p>
+        <button onClick={ user.delete }}>DELETE USER</button>
+        <button onClick={ followers.fetch }>LOAD FOLLOWERS</button>
         <div>
           { followers.value.map((follower) =>
             <div>
@@ -237,7 +207,8 @@ These are the options each resource definition takes:
     - `invalidate` - marks the data as invalid in the store and therefore will
       not retrieve it from the state anymore.
     - `prepopulate` - prepopulate the store with a placeholder for the resource
-      until it is fetched successfully.
+      until it is fetched successfully. Called by default on all of
+      TpT-Connect's resources.
 
 ### Server Rendering
 
@@ -283,3 +254,4 @@ localStorage.debug = 'tptconnect:*';
 
 (NOTE: when running on the server, set the env var `DEBUG`)
 
+<!-- TODO: how does it compare? (with Relay, ReactAsyncConnect -->
