@@ -229,8 +229,8 @@ These are the options each resource definition takes:
 
     - `refetchAfter` (`Boolean|String`, optional, defaults to `false`) -
       whether or not TpT-Connect should refetch the resource after the action
-      completes. Set to 'success' to refetch only after successful response or
-      'error' to only refetch after failure.
+      completes. Set to `'success'` to refetch only after successful response or
+      `'error'` to only refetch after failure.
 
   - Built-in actions on all resources:
     - `fetch` - force fetch the data.

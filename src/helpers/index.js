@@ -51,7 +51,7 @@ export function requestKey({ url, headers, method, body }) {
   ].map(encodeURIComponent).join('|'));
 }
 
-export function findInState(state, resourceDefinition) {
+export function findInState(state = { connect: {} }, resourceDefinition) {
   const { paramsToResources = {}, resources = {} } = state.connect;
   const { isArray, defaultValue } = resourceDefinition;
   const key = schemaKey(resourceDefinition);
