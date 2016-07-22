@@ -43,6 +43,7 @@ class DemoComponent extends Component {
   }
 
   render() {
+    console.log(this.props.reduxProp)
     const { children, user } = this.props;
     return (
       <div>

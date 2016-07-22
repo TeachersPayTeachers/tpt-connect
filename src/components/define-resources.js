@@ -1,4 +1,4 @@
-import { PropTypes, cloneElement } from 'react';
+import { PropTypes } from 'react';
 import { bindActionCreators } from 'redux';
 import * as actions from '../actions';
 import { fullUrl, findInState, normalizeResourceDefinition, extendFunction } from '../helpers';
@@ -18,6 +18,9 @@ export default function defineResources(mapStateToResources) {
         options: PropTypes.object
       };
 
+      /**
+       * @override
+       */
       constructor(...args) {
         super(...args);
         this.resourceProps = {};
@@ -27,8 +30,10 @@ export default function defineResources(mapStateToResources) {
 
       componentWillMount() {
         const { isServer } = this.options;
-        this.updateResourceProps();
-        // fetch all resources before first render
+        // gotta call it once before triggering fetch
+        this.haveResourcePropsChanged = this.updateResourceProps();
+        // trigger fetch of all resources before first render (cant be in render
+        // method since it triggers a setState on prepopulate)
         this.fetchResources(isServer ? this.serverResources : this.allResources);
       }
 
@@ -174,18 +179,28 @@ export default function defineResources(mapStateToResources) {
       /**
        * @override
        */
+      updateMergedPropsIfNeeded() {
+        const haveUpdated = super.updateMergedPropsIfNeeded();
+        if (this.haveResourcePropsChanged) {
+          this.mergedProps = { ...this.mergedProps, ...this.resourceProps };
+        }
+        return haveUpdated || this.haveResourcePropsChanged;
+      }
+
+      /**
+       * @override
+       */
       render() {
-        // redux's render clears both
-        const shouldUpdateResourceProps = this.haveOwnPropsChanged || this.hasStoreStateChanged;
-
-        this.renderedElement = super.render();
-
-        if (shouldUpdateResourceProps) {
-          this.updateResourceProps();
-          this.renderedElement = cloneElement(this.renderedElement, this.resourceProps);
+        if (this.haveOwnPropsChanged || this.hasStoreStateChanged) {
+          this.haveResourcePropsChanged = this.updateResourceProps();
         }
 
-        return this.renderedElement;
+        // overwriting so redux will call updateMergedPropsIfNeeded when our
+        // resourceProps have changed
+        this.haveOwnPropsChanged =
+          this.haveOwnPropsChanged || this.haveResourcePropsChanged;
+
+        return super.render();
       }
     }
 
