@@ -132,8 +132,11 @@ export function normalizeResourceDefinition(definition) {
 
   definition.url = fullUrl(definition.url, definition.params);
   definition.method = definition.method.toUpperCase();
-  definition.isArray = definition.schema && !definition.schema.getKey;
   definition.requestKey = requestKey(definition);
+
+  if (definition.isArray === undefined) {
+    definition.isArray = definition.schema && !definition.schema.getKey;
+  }
 
   if (definition.defaultValue === undefined) {
     definition.defaultValue = definition.isArray ? [] : {};
