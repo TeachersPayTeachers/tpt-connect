@@ -163,6 +163,9 @@ These are the options each resource definition takes:
   resources from being fetched when rendered on the server (when `isServer` is
   set to `true` on `ConnectProvider`).
 
+- `defaultValue` (`Any`, optional, defaults to `{}` or `[]` depending on
+  schema) - used to define what `value` should be set to on prepopulate.
+
 - `normalize` (`Function`, optional, defaults to
   [normalizr](https://github.com/gaearon/normalizr#normalizeobj-schema-options)'s
   `normalize`) - a function used to normalize the JSON returned from the

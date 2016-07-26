@@ -630,8 +630,18 @@ describe('tpt-connect', () => {
       renderComponent(() => ({ user: { ...resourceDefinition, schema: undefined } }));
       defer(() => {
         expect(domElement._props.user.value.id).toBeDefined();
+        const state = store.getState().connect;
+        const [requestKey] = Object.keys(state.paramsToResources);
+        expect(state.paramsToResources[requestKey].data.default.length).toEqual(1);
         done();
       });
+    });
+
+    it('prepopulates with an array if isArray is set to true', () => {
+      renderComponent(() => ({
+        user: { ...resourceDefinition, isArray: true, schema: undefined }
+      }));
+      expect(domElement._props.user.value).toEqual(jasmine.any(Array));
     });
   });
 
