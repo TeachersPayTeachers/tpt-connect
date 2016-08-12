@@ -54,7 +54,7 @@ function onResponse(resourceDefinition, meta, opts) {
       ? 'text'
       : 'json';
 
-    return response[type]().then((data) => {
+    return response.clone()[type]().then((data) => {
       if (!response.ok) { throw new Error(JSON.stringify(data)); }
       logger.info('Fetched resource successfully:', resourceDefinition);
 
