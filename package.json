@@ -51,6 +51,7 @@
     "karma-sourcemap-loader": "0.3.7",
     "karma-webpack": "1.7.0",
     "node-sass": "3.4.2",
+    "node-fetch": "git://github.com/Peleg/node-fetch.git#v1.6.0-gzip-clone",
     "phantomjs": "1.9.19",
     "react": "^15.0.0-0",
     "react-dom": "^15.0.0-0",
