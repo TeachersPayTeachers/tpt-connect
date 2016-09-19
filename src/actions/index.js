@@ -10,27 +10,30 @@ export const TPT_CONNECT_INVALIDATE = 'TPT_CONNECT_INVALIDATE';
 
 export function computePayload(resourceDefinition, meta, data, response) {
   const { schema, normalize = _normalize, updateStrategy } = resourceDefinition;
-  if (!updateStrategy) { return {}; }
 
-  // TODO: refactor this...
   let indexedEntities = {};
   let indices = [];
-  if (schema && typeof data === 'object') { // try to normalize & index
-    let { entities = {}, result = [] } = normalize(data, schema);
-    result = [].concat(result); // normalizr returns single id for non-arrays
-    if (result.filter((id) => id).length === 0 && Object.keys(entities).length !== 0) {
-      indices = [data]; // non-indexable
-    } else {
-      indices = result;
-      indexedEntities = entities;
+
+  // TODO: refactor this...
+  if (updateStrategy) {
+    if (schema && typeof data === 'object') { // try to normalize & index
+      let { entities = {}, result = [] } = normalize(data, schema);
+      result = [].concat(result); // normalizr returns single id for non-arrays
+      if (result.filter((id) => id).length === 0 && Object.keys(entities).length !== 0) {
+        indices = [data]; // non-indexable
+      } else {
+        indices = result;
+        indexedEntities = entities;
+      }
+    } else if (data) { // non-indexable
+      indices = [data];
     }
-  } else if (data) { // non-indexable
-    indices = [data];
   }
 
   return {
     updateStrategy, // so reducer can decide if to append paramsToResources or replace
-    lastResponse: typeof window === 'undefined' && response, // TODO: this is shit
+    // TODO: this is shit
+    lastResponse: typeof window === 'undefined' && meta.isError && response,
     resources: indexedEntities,
     paramsToResources: {
       [resourceDefinition.requestKey]: {
@@ -50,9 +53,9 @@ function onResponse(resourceDefinition, meta, opts) {
       lastUpdated: Date.now()
     };
 
-    const type = response.headers.get('content-type').toLowerCase().includes('text/html')
-      ? 'text'
-      : 'json';
+    const type = response.headers.get('content-type').toLowerCase().includes('application/json')
+      ? 'json'
+      : 'text';
 
     return response.clone()[type]().then((data) => {
       if (!response.ok) { throw new Error(JSON.stringify(data)); }

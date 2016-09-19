@@ -331,8 +331,10 @@ describe('tpt-connect', () => {
         defer(() => {
           expect(window.fetch.calls.count()).toEqual(1);
           const state = provider.props.store.getState().connect;
-          expect(state.resources).toBe(undefined);
-          expect(state.paramsToResources).toBe(undefined);
+
+          expect(Object.keys(state.resources).length).toEqual(0);
+
+          expect(Object.keys(state.paramsToResources).length).toEqual(1);
           done();
         });
       });
