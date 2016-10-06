@@ -17,6 +17,7 @@
     "prepublish": "rm -rf lib && npm run build"
   },
   "devDependencies": {
+    "babel-cli": "^6.16.0",
     "babel-core": "6.4.5",
     "babel-eslint": "5.0.0-beta6",
     "babel-loader": "6.2.1",
@@ -50,8 +51,8 @@
     "karma-phantomjs-launcher": "0.2.3",
     "karma-sourcemap-loader": "0.3.7",
     "karma-webpack": "1.7.0",
-    "node-sass": "3.4.2",
     "node-fetch": "git://github.com/Peleg/node-fetch.git#v1.6.0-10mb-hwm",
+    "node-sass": "3.4.2",
     "phantomjs": "1.9.19",
     "react": "^15.0.0-0",
     "react-dom": "^15.0.0-0",
