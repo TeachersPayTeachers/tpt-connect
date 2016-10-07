@@ -1,10 +1,11 @@
+import invariant from 'invariant';
+import { Children } from 'react';
 import querystring from 'querystring';
 import normalizeUrl from 'normalize-url';
 import stringHash from 'string-hash';
 import debug from 'debug';
 import { Schema, normalize } from 'normalizr';
 import { computePayload } from '../actions';
-import invariant from 'invariant';
 
 /**
  * Sorts object alphabetically
@@ -49,6 +50,13 @@ export function requestKey({ url, headers, method, body }) {
     normalizeParams(headers), // TODO: lowercase header keys
     normalizeParams(body)
   ].map(encodeURIComponent).join('|'));
+}
+
+export function isInState(state, resourceDefinition) {
+  return state &&
+    state.connect &&
+    state.connect.paramsToResources &&
+    state.connect.paramsToResources[resourceDefinition.requestKey];
 }
 
 export function findInState(state = { connect: {} }, resourceDefinition) {
@@ -169,3 +177,54 @@ export function extendFunction(...functions) {
     }
   };
 }
+
+/**
+ * Traverse a react tree and trigger all tpt-connect fetches so we dont have to
+ * render twice
+ *
+ * idea taken from react-apollo
+ * https://github.com/apollostack/react-apollo/blob/master/src/server.ts
+ */
+export function triggerFetches(component, context = {}) {
+  if (!component) { return; }
+
+  if (typeof component === 'function') { // stateless
+    component = { type: component };
+  }
+
+  const { type, props = {} } = component; // TODO: can we get context here too?
+
+  if (typeof type !== 'function') { // html el?
+    Children.forEach(props.children, (child) => {
+      triggerFetches(child, context);
+    });
+  } else { // react component
+    const ownProps = { ...(type.defaultProps || {}), ...props };
+    const Component = new type(ownProps, context);
+
+    try {
+      // not sure why we need these
+      Component.props = ownProps;
+      Component.context = context;
+      Component.setState = (newState) => { // simplify setState
+        Component.state = { ...Component.state, ...newState };
+      };
+    } catch (e) {}
+
+    // triggers fetch if tptconnect component
+    if (Component.componentWillMount) {
+      Component.componentWillMount();
+    }
+
+    if (Component.getChildContext) {
+      context = { ...context, ...Component.getChildContext() };
+    }
+
+    const child = Component.render
+      ? Component.render()
+      : Component;
+
+    triggerFetches(child, context);
+  }
+}
+

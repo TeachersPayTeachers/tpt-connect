@@ -1,7 +1,7 @@
 import { PropTypes } from 'react';
 import { bindActionCreators } from 'redux';
 import * as actions from '../actions';
-import { fullUrl, findInState, normalizeResourceDefinition, extendFunction } from '../helpers';
+import { fullUrl, isInState, findInState, normalizeResourceDefinition, extendFunction } from '../helpers';
 import hoistStatics from 'hoist-non-react-statics';
 
 export default function defineResources(mapStateToResources) {
@@ -44,7 +44,7 @@ export default function defineResources(mapStateToResources) {
       fetchResources(resources) {
         resources.forEach((resource) => {
           const definition = resource.definition;
-          if (definition.auto && !findInState(this.state.storeState, definition)) {
+          if (definition.auto && !isInState(this.state.storeState, definition)) {
             resource.prepopulate();
             if (definition.debounce !== undefined) {
               clearTimeout(resource.definition._timerId);
