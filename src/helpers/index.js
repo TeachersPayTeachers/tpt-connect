@@ -113,10 +113,7 @@ const definitionDefaults = {
   normalize,
   actions: {},
   extends: {},
-  clientOnly: false,
-  headers: {
-    'content-type': 'application/json'
-  }
+  clientOnly: false
 };
 
 export function normalizeResourceDefinition(definition) {

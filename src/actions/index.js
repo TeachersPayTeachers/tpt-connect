@@ -115,12 +115,12 @@ export function prepopulateResource(resourceDefinition) {
 }
 
 export function dispatchRequest(resourceDefinition, options) {
-  const { headers, method, url: endpoint, body } = resourceDefinition;
+  const { headers, method, url: endpoint, body, credentials, redirect } = resourceDefinition;
   logger.info('Dispatching request:', resourceDefinition);
   return {
     [CALL_API]: {
-      credentials: 'include',
-      redirect: 'manual',
+      credentials,
+      redirect,
       headers,
       method,
       endpoint,
