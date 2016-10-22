@@ -39,6 +39,9 @@ export default function defineResources(mapStateToResources) {
         // keep in array as well for easier access
         this.allResources = [];
 
+        // the state props managed by redux
+        this._reduxStateProps = {};
+
         this.updateOptionsIfNeeded();
       }
 
@@ -57,7 +60,7 @@ export default function defineResources(mapStateToResources) {
 
       fetchResources(resources) {
         resources.forEach((resource) => {
-          const definition = resource.definition;
+          const { definition } = resource;
           if (definition.auto && !isInState(this.state.storeState, definition)) {
             resource.prepopulate();
             if (definition.debounce !== undefined) {
@@ -84,14 +87,24 @@ export default function defineResources(mapStateToResources) {
        * @override
        */
       updateStatePropsIfNeeded() {
+        // reinstate reudx's stateProps here so we dont get false
+        // `haveStatePropsChanged` when they havent
+        this.stateProps = this._reduxStateProps;
+
         const haveStatePropsChanged = super.updateStatePropsIfNeeded();
+
+        // keep ref to redux's stateProps
+        this._reduxStateProps = this.stateProps;
+
         this.haveResourcePropsChanged = this.updateResourcePropsIfNeeded();
-        // overwriting to include our resourceProps as well
+
+        // overwriting to include our resourceProps as well before redux renders
         this.stateProps = { ...this.stateProps, ...this.resourceProps };
+
         // if this is just a tpt-connect component, we can prevent triggering a
         // re-render if resourceProps stayed the same
         return this.haveResourcePropsChanged ||
-          (isAlreadyWrappedInConnect && haveStatePropsChanged);
+          isAlreadyWrappedInConnect && haveStatePropsChanged;
       }
 
       // updating dispatching funcs is only necessary when options changed and
@@ -148,7 +161,13 @@ export default function defineResources(mapStateToResources) {
       }
 
       computeResourceProps() {
-        const resourceDefinitions = mapStateToResources(this.state.storeState, this.props);
+        const resourceDefinitions = mapStateToResources(this.state.storeState, {
+          ...this.props,
+          // extending props so we can access redux's new computed, stateProps
+          // in our mapStateToResources func
+          ...this._reduxStateProps
+        });
+
         return Object.keys(resourceDefinitions).reduce((resourceProps, key) => {
           const oldResource = this.resourceProps[key] || {};
           const definition = normalizeResourceDefinition(resourceDefinitions[key]);
