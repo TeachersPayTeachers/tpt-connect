@@ -14,7 +14,7 @@ export default function defineResources(mapStateToResources) {
   return (WrappedComponent) => {
     // if WrappedComponent is already wrapped in redux's connect, there is no
     // need to wrap again.
-    const isAlreadyWrappedInConnect = WrappedComponent.name === 'Connect';
+    const isAlreadyWrappedInConnect = String(WrappedComponent.displayName).startsWith('Connect');
 
     const ReduxConnectComponent = isAlreadyWrappedInConnect
       ? WrappedComponent
