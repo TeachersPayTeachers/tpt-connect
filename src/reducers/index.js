@@ -41,6 +41,8 @@ export default function connectReducer(state = {}, { type, error, payload }) {
     if (updateStrategy && Array.isArray(oldValue) && Array.isArray(newValue)) {
       if (updateStrategy === 'append') { // TODO: concat only uniques?
         newValue = oldValue.concat(newValue);
+      } else if (updateStrategy === 'prepend') {
+        newValue = newValue.concat(oldValue);
       } else if (updateStrategy === 'remove') {
         newValue = oldValue.filter((id) => !newValue.includes(id));
       }

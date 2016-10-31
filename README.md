@@ -180,7 +180,7 @@ These are the options each resource definition takes:
   `GET`; otherwise `false`) - whether or not TpT-Connect should store the
   response data in its Redux store. Available options are: `'replace'` (same as
   `true`), `'append'` (adds the returned resource to the existing resources in
-  the state), and `'remove'` (removes the returned resources from the resources
+  the state), `'prepend'` (prepends resource to the existing resources in state) and `'remove'` (removes the returned resources from the resources
   in the state), or `false` to not store at all. This options is useful
   especially when an action returns returns an updated/deleted resource and you
   want TpT-Connect to update its store w/out having to make additional
