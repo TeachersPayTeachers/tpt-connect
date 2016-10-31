@@ -1,6 +1,6 @@
 import { CALL_API } from 'redux-api-middleware';
-import { schemaKey, logger } from '../helpers';
 import { normalize as _normalize } from 'normalizr';
+import { schemaKey, logger } from '../helpers';
 
 export const TPT_CONNECT_REQUEST = 'TPT_CONNECT_REQUEST';
 export const TPT_CONNECT_SUCCESS = 'TPT_CONNECT_SUCCESS';
@@ -9,7 +9,7 @@ export const TPT_CONNECT_PREPOPULATE = 'TPT_CONNECT_PREPOPULATE';
 export const TPT_CONNECT_INVALIDATE = 'TPT_CONNECT_INVALIDATE';
 
 export function computePayload(resourceDefinition, meta, data, response) {
-  const { schema, normalize = _normalize, updateStrategy } = resourceDefinition;
+  const { schema, updateStrategy } = resourceDefinition;
 
   let indexedEntities = {};
   let indices = [];
@@ -17,6 +17,7 @@ export function computePayload(resourceDefinition, meta, data, response) {
   // TODO: refactor this...
   if (updateStrategy) {
     if (schema && typeof data === 'object') { // try to normalize & index
+      const { normalize = _normalize } = resourceDefinition;
       let { entities = {}, result = [] } = normalize(data, schema);
       result = [].concat(result); // normalizr returns single id for non-arrays
       if (result.filter((id) => id).length === 0 && Object.keys(entities).length !== 0) {
@@ -26,6 +27,10 @@ export function computePayload(resourceDefinition, meta, data, response) {
         indexedEntities = entities;
       }
     } else if (data) { // non-indexable
+      if (schema) {
+        const { normalize = (d) => d } = resourceDefinition;
+        data = normalize(data);
+      }
       indices = [data];
     }
   }
