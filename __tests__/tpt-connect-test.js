@@ -6,6 +6,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import TestUtils from 'react/lib/ReactTestUtils';
 import { Provider } from 'react-redux';
 import { createStore, combineReducers, applyMiddleware } from 'redux';
+import { normalize } from 'normalizr';
+
 import {
   defineResources,
   Schema,
@@ -622,6 +624,59 @@ describe('tpt-connect', () => {
         const [requestKey] = Object.keys(state.paramsToResources);
         expect(state.paramsToResources[requestKey].data.user.length).toEqual(1);
         expect(state.resources.user).toBeUndefined();
+        done();
+      });
+    });
+
+    it('still tries to normalize it', (done) => {
+      const normalizeSpy = jasmine.createSpy().and.callFake(normalize);
+      renderComponent(() => ({
+        user: {
+          ...resourceDefinition,
+          normalize: normalizeSpy
+        }
+      }));
+      defer(() => {
+        expect(normalizeSpy).toHaveBeenCalled();
+        done();
+      });
+    });
+  });
+
+  describe('when response is not json', () => {
+    const htmlBody = '<!DOCTYPE html><html><head></head><body></body></html>';
+
+    beforeEach(() => {
+      window.fetch.and.callFake(() => {
+        return Promise.resolve(new Response(htmlBody, {
+          headers: { 'Content-Type': 'text/html' },
+          status: 200
+        }));
+      });
+    });
+
+    it('stores the resource directly under paramsToResources', (done) => {
+      renderComponent(() => ({ user: resourceDefinition }));
+      defer(() => {
+        expect(domElement._props.user.value).toEqual(htmlBody);
+        const state = store.getState().connect;
+        const [requestKey] = Object.keys(state.paramsToResources);
+        expect(state.paramsToResources[requestKey].data.user.length).toEqual(1);
+        expect(state.resources.user).toBeUndefined();
+        done();
+      });
+    });
+
+    it('still tries to normalize it', (done) => {
+      const normalizeSpy = jasmine.createSpy().and.callFake(normalize);
+      renderComponent(() => ({
+        user: {
+          ...resourceDefinition,
+          normalize: normalizeSpy
+        }
+      }));
+      defer(() => {
+        expect(normalizeSpy).toHaveBeenCalled();
         done();
       });
     });
