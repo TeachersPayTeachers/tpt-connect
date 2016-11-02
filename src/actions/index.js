@@ -8,42 +8,64 @@ export const TPT_CONNECT_FAILURE = 'TPT_CONNECT_FAILURE';
 export const TPT_CONNECT_PREPOPULATE = 'TPT_CONNECT_PREPOPULATE';
 export const TPT_CONNECT_INVALIDATE = 'TPT_CONNECT_INVALIDATE';
 
-export function computePayload(resourceDefinition, meta, data, response) {
-  const { schema, updateStrategy } = resourceDefinition;
+/**
+ * This function tries to normalize the data given to it with the
+ * normalize function the client provided. if a normalize function is missing,
+ * itll default to normalizr's normalize which is a bit tricky and requires some
+ * help; if the normalize function was given non-indexable data but was expected
+ * to index it (given a schema), it'll return the raw data as-is. If no schema
+ * was given (ie no indexing was expected), but there's a normalize function,
+ * the returned data will be the normalized data will be returned but w/out any
+ * indexing.
+ */
+function normalizeData({ normalize = _normalize, schema }, data) {
+  let normalizedData = data;
+  try {
+    normalizedData = normalize(data, schema);
 
-  let indexedEntities = {};
-  let indices = [];
+    if (schema) { // tried normalizing indexed data
+      let {
+        entities = {}, // indexed resources
+        result = [] // just indices
+      } = normalizedData;
 
-  // TODO: refactor this...
-  if (updateStrategy) {
-    if (schema && typeof data === 'object') { // try to normalize & index
-      const { normalize = _normalize } = resourceDefinition;
-      let { entities = {}, result = [] } = normalize(data, schema);
-      result = [].concat(result); // normalizr returns single id for non-arrays
-      if (result.filter((id) => id).length === 0 && Object.keys(entities).length !== 0) {
-        indices = [data]; // non-indexable
-      } else {
-        indices = result;
-        indexedEntities = entities;
+      // normalizr return single id for non-arrays
+      result = []
+        .concat(result)
+        .filter((i) => i || i === 0);
+
+      // data is non-indexable (missing ids most likely)
+      if (!result.length && Object.keys(entities).length) {
+        normalizedData = data; // use raw data
+      } else { // everything was a-ok
+        return { result, entities };
       }
-    } else if (data) { // non-indexable
-      if (schema) {
-        const { normalize = (d) => d } = resourceDefinition;
-        data = normalize(data);
-      }
-      indices = [data];
     }
-  }
+  } catch (e) { /* carry on */ }
+  return {
+    result: [normalizedData]
+  };
+}
+
+export function computePayload(resourceDefinition, meta, data, response) {
+  const { updateStrategy } = resourceDefinition;
+
+  const {
+    result = [], // indices
+    entities = {} // indexed entities
+  } = data && updateStrategy
+    ? normalizeData(resourceDefinition, data)
+    : {};
 
   return {
     updateStrategy, // so reducer can decide if to append paramsToResources or replace
     // TODO: this is shit
     lastResponse: typeof window === 'undefined' && meta.isError && response,
-    resources: indexedEntities,
+    resources: entities,
     paramsToResources: {
       [resourceDefinition.requestKey]: {
         meta,
-        data: { [schemaKey(resourceDefinition)]: indices }
+        data: { [schemaKey(resourceDefinition)]: result }
       }
     }
   };
