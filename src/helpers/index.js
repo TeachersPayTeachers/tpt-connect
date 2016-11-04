@@ -225,3 +225,37 @@ export function triggerFetches(component, context = {}) {
   }
 }
 
+/**
+ * Subscribing to store changes so we can determine when tpt-connect is
+ * done fetching its data before we re-render
+ */
+export function fetchTreeData(reactTree, store) {
+  triggerFetches(reactTree);
+
+  return new Promise((resolve, reject) => {
+    const { isAllFetched = true } = store.getState().connect;
+    if (isAllFetched) {
+      resolve();
+      return;
+    }
+    const unsubscribe = store.subscribe(() => {
+      const state = store.getState();
+
+      if (state.connect.error) {
+        unsubscribe();
+        reject({
+          err: state.connect.error,
+          response: state.connect.lastResponse
+        });
+        return;
+      }
+
+      if (state.connect.isAllFetched) {
+        unsubscribe();
+        resolve();
+        return;
+      }
+    });
+  });
+}
+
