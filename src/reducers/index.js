@@ -45,6 +45,8 @@ export default function connectReducer(state = {}, { type, error, payload }) {
         newValue = newValue.concat(oldValue);
       } else if (updateStrategy === 'remove') {
         newValue = oldValue.filter((id) => !newValue.includes(id));
+      } else if (typeof updateStrategy === 'function') {
+        newValue = updateStrategy(newValue, oldValue);
       }
       return newValue;
     }
