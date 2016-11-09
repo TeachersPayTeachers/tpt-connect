@@ -230,9 +230,7 @@ export function triggerFetches(component, context = {}) {
  * done fetching its data before we re-render
  */
 export function fetchTreeData(reactTree, store) {
-  triggerFetches(reactTree);
-
-  return new Promise((resolve, reject) => {
+  const promise = new Promise((resolve, reject) => {
     const { isAllFetched = true } = store.getState().connect;
     if (isAllFetched) {
       resolve();
@@ -257,5 +255,9 @@ export function fetchTreeData(reactTree, store) {
       }
     });
   });
+
+  triggerFetches(reactTree);
+
+  return promise;
 }
 
