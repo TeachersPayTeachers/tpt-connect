@@ -231,11 +231,6 @@ export function triggerFetches(component, context = {}) {
  */
 export function fetchTreeData(reactTree, store) {
   const promise = new Promise((resolve, reject) => {
-    const { isAllFetched = true } = store.getState().connect;
-    if (isAllFetched) {
-      resolve();
-      return;
-    }
     const unsubscribe = store.subscribe(() => {
       const state = store.getState();
 
