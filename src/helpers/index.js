@@ -182,48 +182,71 @@ export function extendFunction(...functions) {
  * idea taken from react-apollo
  * https://github.com/apollostack/react-apollo/blob/master/src/server.ts
  */
-export function triggerFetches(component, context = {}) {
-  if (!component) { return; }
-
-  if (typeof component === 'function') { // stateless
-    component = { type: component };
+export const triggerFetches = (() => { // IIFE
+  // If we're handling a stateless component we still need to traverse its
+  // children. React uses a similar solution where it wraps it in a class and
+  // gives it a `render` method.
+  //
+  // See:
+  // https://github.com/facebook/react/blob/v15.0.1/src/renderers/shared/reconciler/ReactCompositeComponent.js#L43-L50
+  // https://github.com/facebook/react/blob/v15.0.1/src/renderers/shared/reconciler/ReactCompositeComponent.js#L186-L198
+  class StatelessComponent {
+    constructor(Component, props, context) {
+      this.Component = Component;
+      this.props = props;
+      this.context = context;
+    }
+    render() {
+      // eslint-disable-next-line new-cap
+      return this.Component(this.props, this.context, this.updater);
+    }
   }
 
-  const { type, props = {} } = component; // TODO: can we get context here too?
+  // eslint-disable-next-line no-shadow
+  return function triggerFetches(component, context = {}) {
+    if (!component) { return; }
 
-  if (typeof type !== 'function') { // html el?
-    Children.forEach(props.children, (child) => {
+    if (typeof component === 'function') { // stateless
+      component = { type: component };
+    }
+
+    const { type: Component, props = {} } = component; // TODO: can we get context here too?
+
+    if (typeof Component !== 'function') { // html el?
+      Children.forEach(props.children, (child) => {
+        triggerFetches(child, context);
+      });
+    } else { // react component
+      const ownProps = { ...(Component.defaultProps || {}), ...props };
+
+      const inst = Component.prototype.render
+        ? new Component(ownProps, context)
+        : new StatelessComponent(Component, ownProps, context); // stateless
+
+      try {
+        // not sure why we need these
+        inst.props = ownProps;
+        inst.context = context;
+        inst.setState = (newState) => { // simplify setState
+          inst.state = { ...inst.state, ...newState };
+        };
+      } catch (e) {}
+
+      // triggers fetch if tptconnect component
+      if (inst.componentWillMount) {
+        inst.componentWillMount();
+      }
+
+      if (inst.getChildContext) {
+        context = { ...context, ...inst.getChildContext() };
+      }
+
+      const child = inst.render();
+
       triggerFetches(child, context);
-    });
-  } else { // react component
-    const ownProps = { ...(type.defaultProps || {}), ...props };
-    const Component = new type(ownProps, context);
-
-    try {
-      // not sure why we need these
-      Component.props = ownProps;
-      Component.context = context;
-      Component.setState = (newState) => { // simplify setState
-        Component.state = { ...Component.state, ...newState };
-      };
-    } catch (e) {}
-
-    // triggers fetch if tptconnect component
-    if (Component.componentWillMount) {
-      Component.componentWillMount();
     }
-
-    if (Component.getChildContext) {
-      context = { ...context, ...Component.getChildContext() };
-    }
-
-    const child = Component.render
-      ? Component.render()
-      : Component;
-
-    triggerFetches(child, context);
-  }
-}
+  };
+})();
 
 /**
  * Subscribing to store changes so we can determine when tpt-connect is
