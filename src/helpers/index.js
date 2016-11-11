@@ -253,7 +253,15 @@ export const triggerFetches = (() => { // IIFE
  * done fetching its data before we re-render
  */
 export function fetchTreeData(reactTree, store) {
-  const promise = new Promise((resolve, reject) => {
+  triggerFetches(reactTree);
+
+  return new Promise((resolve, reject) => {
+    const { isAllFetched = true } = store.getState().connect;
+    if (isAllFetched) {
+      resolve();
+      return;
+    }
+
     const unsubscribe = store.subscribe(() => {
       const state = store.getState();
 
@@ -273,9 +281,5 @@ export function fetchTreeData(reactTree, store) {
       }
     });
   });
-
-  triggerFetches(reactTree);
-
-  return promise;
 }
 
