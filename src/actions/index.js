@@ -80,7 +80,9 @@ function onResponse(resourceDefinition, meta, opts) {
       lastUpdated: Date.now()
     };
 
-    const type = response.headers.get('content-type').toLowerCase().includes('application/json')
+    const contentTypeHeader = response.headers.get('content-type');
+
+    const type = contentTypeHeader && contentTypeHeader.toLowerCase().includes('application/json')
       ? 'json'
       : 'text';
 
