@@ -43,13 +43,17 @@ export function normalizeParams(params = {}) {
   return querystring.stringify(_sortObject(params));
 }
 
-export function requestKey({ url, headers, method, body }) {
-  return stringHash([
+function defaultComputeKey(url, headers, method, body) {
+  return [
     method,
     url,
     normalizeParams(headers), // TODO: lowercase header keys
     normalizeParams(body)
-  ].map(encodeURIComponent).join('|'));
+  ].map(encodeURIComponent).join('|');
+}
+
+export function requestKey({ url, headers, method, body, computeKey = defaultComputeKey}) {
+  return stringHash(computeKey(url, headers, method, body));
 }
 
 export function isInState(state, resourceDefinition) {

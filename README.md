@@ -193,6 +193,12 @@ These are the options each resource definition takes:
   this feature would be useful when used to fetch search results as the user
   types.
 
+- `computeKey` (`Function`, optional) - a function which computes the keys stored in
+  tpt-connect's store before hashing.  The arguments are `url`, `headers`, `method` and
+  `body`.  By default tpt-connect concatenates and hashes the url, method type, body and
+  all the headers.  This function can be used to make tpt-connect not hash the headers if
+  they change but don't affect the request.
+
 - `actions` (`Object`, optional) - an object defining functions, or
   sub-objects, which are used as sub-resource definitions to request at a later
   time and will be available on the TpT-Connect resource. Calling an action

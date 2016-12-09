@@ -3,7 +3,7 @@ import 'babel-polyfill';
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import { renderToStaticMarkup } from 'react-dom/server';
-import TestUtils from 'react/lib/ReactTestUtils';
+import TestUtils from 'react-addons-test-utils';
 import { Provider } from 'react-redux';
 import { createStore, combineReducers, applyMiddleware } from 'redux';
 import { normalize } from 'normalizr';
