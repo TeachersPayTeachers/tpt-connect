@@ -6,6 +6,7 @@ import stringHash from 'string-hash';
 import debug from 'debug';
 import { Schema, normalize } from 'normalizr';
 import { computePayload } from '../actions';
+import { denormalize } from 'denormalizr';
 
 /**
  * Sorts object alphabetically
@@ -86,7 +87,7 @@ export function findInState(state = { connect: {} }, resourceDefinition) {
 
   return {
     meta: resourceMap.meta,
-    value: mappedResources
+    value: denormalize(mappedResources, resources, resourceDefinition.schema)
   };
 }
 
