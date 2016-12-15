@@ -66,7 +66,7 @@ export function isInState(state, resourceDefinition) {
 
 export function findInState(state = { connect: {} }, resourceDefinition) {
   const { paramsToResources = {}, resources = {} } = state.connect;
-  const { isArray, defaultValue } = resourceDefinition;
+  const { isArray, defaultValue, schema } = resourceDefinition;
   const key = schemaKey(resourceDefinition);
   const resourceMap = paramsToResources[resourceDefinition.requestKey];
   const resourceKeys = resourceMap && resourceMap.data[key];
@@ -87,8 +87,8 @@ export function findInState(state = { connect: {} }, resourceDefinition) {
 
   return {
     meta: resourceMap.meta,
-    value: resourceDefinition.schema ?
-      denormalize(mappedResources, resources, resourceDefinition.schema) :
+    value: schema && resources[key] ?
+      denormalize(mappedResources, resources, schema) :
       mappedResources
   };
 }
