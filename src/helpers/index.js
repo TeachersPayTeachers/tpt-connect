@@ -87,7 +87,9 @@ export function findInState(state = { connect: {} }, resourceDefinition) {
 
   return {
     meta: resourceMap.meta,
-    value: denormalize(mappedResources, resources, resourceDefinition.schema)
+    value: resourceDefinition.schema ?
+      denormalize(mappedResources, resources, resourceDefinition.schema) :
+      mappedResources
   };
 }
 
