@@ -63,14 +63,10 @@ export default function defineResources(mapStateToResources) {
           const { definition } = resource;
           if (definition.auto && !isInState(this.state.storeState, definition)) {
             resource.prepopulate();
-            if (definition.debounce !== undefined) {
-              clearTimeout(resource.definition._timerId);
-              resource.definition._timerId = setTimeout(() => {
-                resource.fetch();
-              }, definition.debounce);
-            } else {
-              resource.fetch();
-            }
+            resource.fetch().catch(() => {
+              /* we dont expose the promise here, so we should probably catch
+               * those rejections to prevent unhandled rejections */
+            });
           }
         });
       }
