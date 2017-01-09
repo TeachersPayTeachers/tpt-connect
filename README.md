@@ -188,11 +188,6 @@ These are the options each resource definition takes:
   resource and you want TpT-Connect to update its store w/out having to make additional
   requests.
 
-- `debounce` (`Number`, optional) - number of milliseconds TpT-Connect should
-  debounce subsequent requests by for this resource definition. For example,
-  this feature would be useful when used to fetch search results as the user
-  types.
-
 - `computeKey` (`Function`, optional) - a function which computes the keys stored in
   tpt-connect's store before hashing.  The arguments are `url`, `headers`, `method` and
   `body`.  By default tpt-connect concatenates and hashes the url, method type, body and

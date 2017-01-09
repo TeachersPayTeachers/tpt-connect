@@ -148,6 +148,18 @@ describe('tpt-connect', () => {
           done();
         });
       });
+
+      it('does not trigger unhandledRejection', (done) => {
+        let rejected = false;
+        window.addEventListener('unhandledrejection', () => {
+          rejected = true;
+        });
+        renderComponent();
+        defer(() => {
+          expect(rejected).toBe(false);
+          done();
+        });
+      });
     });
 
     describe('when data is in state', () => {
