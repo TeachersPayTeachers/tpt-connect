@@ -3,7 +3,7 @@ const webpackConfig = require('./webpack.test.config');
 module.exports = function (config) {
   config.set({
     browsers: [
-      'PhantomJS'
+      'Chrome'
     ],
     files: [
       'isomorphic-fetch',
