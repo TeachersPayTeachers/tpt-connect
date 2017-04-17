@@ -1,4 +1,3 @@
-import './support/fetch-mock.js';
 import 'babel-polyfill';
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
@@ -7,6 +6,8 @@ import TestUtils from 'react-addons-test-utils';
 import { Provider } from 'react-redux';
 import { createStore, combineReducers, applyMiddleware } from 'redux';
 import { normalize } from 'normalizr';
+import './support/fetch-mock.js';
+import { query } from '../src/helpers';
 
 import {
   defineResources,
@@ -61,12 +62,11 @@ function renderComponent(mappingFunc) {
 }
 
 describe('tpt-connect', () => {
-  beforeEach(() => {
+  beforeEach((done) => {
     store = createStore(
       combineReducers({ connect: connectReducer }),
       applyMiddleware(connectMiddleware({}))
     );
-    window.fetch.calls.reset();
     window.fetch.and.callFake(() => {
       return Promise.resolve(new Response(JSON.stringify({
         id: 3,
@@ -75,6 +75,11 @@ describe('tpt-connect', () => {
         headers: { 'Content-Type': 'application/json' },
         status: 200
       }));
+    });
+
+    defer(() => {
+      window.fetch.calls.reset();
+      done();
     });
   });
 
@@ -714,7 +719,32 @@ describe('tpt-connect', () => {
     });
   });
 
-  // TODO:
-  describe('when running on an already reduxed component', () => {
+  describe('precache query', () => {
+    it('triggers a fetch', (done) => {
+      expect(window.fetch.calls.count()).toEqual(0);
+      query(resourceDefinition, store).then(() => {
+        expect(window.fetch.calls.count()).toEqual(1);
+        done();
+      });
+    });
+
+    it('populates the store', (done) => {
+      expect(store.getState().connect.isAllFetched).toBe(undefined);
+      query(resourceDefinition, store).then(() => {
+        expect(store.getState().connect.isAllFetched).toBe(true);
+        done();
+      });
+    });
+
+    it('allows for the store to be pre-populated before render', (done) => {
+      query(resourceDefinition, store).then(() => {
+        renderComponent();
+        expect(domElement._props.user.meta.isSuccess).toBe(true);
+        done();
+      });
+    });
   });
+
+  // TODO:
+  describe('when running on an already reduxed component', () => {});
 });
