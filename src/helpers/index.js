@@ -5,7 +5,7 @@ import normalizeUrl from 'normalize-url';
 import stringHash from 'string-hash';
 import debug from 'debug';
 import { Schema, normalize } from 'normalizr';
-import { computePayload } from '../actions';
+import { computePayload, dispatchRequest, prepopulateResource } from '../actions';
 import { denormalize } from 'denormalizr';
 
 /**
@@ -256,12 +256,9 @@ export const triggerFetches = (() => { // IIFE
 })();
 
 /**
- * Subscribing to store changes so we can determine when tpt-connect is
- * done fetching its data before we re-render
+ * Returns a promise which resolves when all tpt-connect requests have finished
  */
-export function fetchTreeData(reactTree, store) {
-  triggerFetches(reactTree);
-
+export function subscribeToStore(store) {
   return new Promise((resolve, reject) => {
     const { isAllFetched = true } = store.getState().connect;
     if (isAllFetched) {
@@ -288,5 +285,21 @@ export function fetchTreeData(reactTree, store) {
       }
     });
   });
+}
+
+/**
+ * Subscribing to store changes so we can determine when tpt-connect is
+ * done fetching its data before we re-render
+ */
+export function fetchTreeData(reactTree, store) {
+  triggerFetches(reactTree);
+  return subscribeToStore(store);
+}
+
+export function query(resourceDefinition, store) {
+  resourceDefinition = normalizeResourceDefinition(resourceDefinition);
+  store.dispatch(prepopulateResource(resourceDefinition));
+  store.dispatch(dispatchRequest(resourceDefinition, {}));
+  return subscribeToStore(store);
 }
 
