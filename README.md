@@ -45,7 +45,7 @@ const store =
   createStore(combineReducers({
     main: rootReducer,
     connect: connectReducer
-  }), optionalInitialState, applyMiddleware(connectMiddleware));
+  }), optionalInitialState, applyMiddleware(connectMiddleware({ fetch: customFetchImpl })));
 
 render() {
   <Provider store={ store }>
