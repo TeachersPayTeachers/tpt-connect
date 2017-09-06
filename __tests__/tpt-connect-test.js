@@ -2,7 +2,7 @@ import 'babel-polyfill';
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import { renderToStaticMarkup } from 'react-dom/server';
-import TestUtils from 'react-addons-test-utils';
+import TestUtils from 'react-dom/test-utils';
 import { Provider } from 'react-redux';
 import { createStore, combineReducers, applyMiddleware } from 'redux';
 import { normalize } from 'normalizr';
@@ -89,7 +89,7 @@ describe('tpt-connect', () => {
         <_Component/>
       </ConnectProvider>
     );
-    expect(provider._reactInternalInstance._instance.state.store).toEqual(jasmine.any(Object));
+    expect(provider._reactInternalInstance.stateNode.state.store).toEqual(jasmine.any(Object));
   });
 
   it('reuses the store its provided with', () => {
@@ -98,7 +98,7 @@ describe('tpt-connect', () => {
         <_Component/>
       </ConnectProvider>
     );
-    expect(provider._reactInternalInstance._instance.state.store).toEqual(store);
+    expect(provider._reactInternalInstance.stateNode.state.store).toEqual(store);
   });
 
   it('populates the prop with a default value', () => {
