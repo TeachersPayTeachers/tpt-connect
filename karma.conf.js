@@ -6,7 +6,6 @@ module.exports = function (config) {
       'Chrome'
     ],
     files: [
-      'isomorphic-fetch',
       'tests.webpack.js'
     ],
     preprocessors: {

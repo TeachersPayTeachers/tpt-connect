@@ -1,4 +1,5 @@
-import { Component, PropTypes } from 'react';
+import { Component } from 'react';
+import PropTypes from 'prop-types';
 import { createStore, combineReducers, applyMiddleware } from 'redux';
 import connectReducer from '../reducers';
 import { apiMiddleware } from 'redux-api-middleware';

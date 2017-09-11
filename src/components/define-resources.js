@@ -1,4 +1,4 @@
-import { PropTypes } from 'react';
+import PropTypes from 'prop-types';
 import { bindActionCreators } from 'redux';
 import hoistStatics from 'hoist-non-react-statics';
 import * as actions from '../actions';
