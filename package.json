@@ -1,6 +1,6 @@
 {
   "name": "@teachers/tpt-connect",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "TpT-Connect is an extension to [Redux](https://github.com/reactjs/redux) which creates a simple interface for components' data fetching.",
   "main": "lib",
   "engines": {
@@ -50,7 +50,7 @@
     "karma-jasmine": "0.3.6",
     "karma-sourcemap-loader": "0.3.7",
     "karma-webpack": "1.7.0",
-    "node-fetch": "git://github.com/Peleg/node-fetch.git#v1.6.0-10mb-hwm",
+    "node-fetch": "git://github.com/teacherspayteachers/node-fetch.git#v1.6.0-10mb-hwm",
     "node-sass": "3.4.2",
     "react": "^16.0.0-beta.5",
     "react-dom": "^16.0.0-beta.5",
@@ -75,14 +75,14 @@
     "normalize-url": "^1.6.0",
     "normalizr": "^2.0.0",
     "querystring": "~0.2.0",
-    "redux-api-middleware": "git://github.com/Peleg/redux-api-middleware.git#8eb5e5adee0ba4e7aa6d1008856d62bc539e89cd",
+    "redux-api-middleware": "git://github.com/teacherspayteachers/redux-api-middleware.git#8eb5e5adee0ba4e7aa6d1008856d62bc539e89cd",
     "string-hash": "^1.1.0"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/teacherspayteachers/tpt-connect.git"
   },
-  "author": "Peleg Rosenthal <peleg@teacherspayteachers.com> (http://peleg.co)",
+  "author": "Peleg Rosenthal <peleg@teacherspayteachers.com> (http://peleg.io)",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/teacherspayteachers/tpt-connect/issues"

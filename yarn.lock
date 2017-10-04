@@ -3623,9 +3623,9 @@ negotiator@0.6.1:
   version "0.6.1"
   resolved "https://registry.yarnpkg.com/negotiator/-/negotiator-0.6.1.tgz#2b327184e8992101177b28563fb5e7102acd0ca9"
 
-node-fetch@^1.0.1, "node-fetch@git://github.com/Peleg/node-fetch.git#v1.6.0-10mb-hwm":
+node-fetch@^1.0.1, "node-fetch@git://github.com/teacherspayteachers/node-fetch.git#v1.6.0-10mb-hwm":
   version "1.6.0"
-  resolved "git://github.com/Peleg/node-fetch.git#f80a640b9fd5f653132d082bc728edf59a912b04"
+  resolved "git://github.com/teacherspayteachers/node-fetch.git#f80a640b9fd5f653132d082bc728edf59a912b04"
   dependencies:
     encoding "^0.1.11"
     is-stream "^1.0.1"
@@ -4586,9 +4586,9 @@ reduce-function-call@^1.0.1:
   dependencies:
     balanced-match "^0.4.2"
 
-"redux-api-middleware@git://github.com/Peleg/redux-api-middleware.git#8eb5e5adee0ba4e7aa6d1008856d62bc539e89cd":
+"redux-api-middleware@git://github.com/teacherspayteachers/redux-api-middleware.git#8eb5e5adee0ba4e7aa6d1008856d62bc539e89cd":
   version "1.0.2"
-  resolved "git://github.com/Peleg/redux-api-middleware.git#8eb5e5adee0ba4e7aa6d1008856d62bc539e89cd"
+  resolved "git://github.com/teacherspayteachers/redux-api-middleware.git#8eb5e5adee0ba4e7aa6d1008856d62bc539e89cd"
   dependencies:
     babel-runtime "^5.8.25"
     isomorphic-fetch "^2.1.1"
