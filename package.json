@@ -76,7 +76,7 @@
     "invariant": "^2.0.0",
     "lodash.mergewith": "^4.4.0",
     "normalize-url": "^1.6.0",
-    "normalizr": "^2.0.0",
+    "normalizr": "2.0.1",
     "querystring": "~0.2.0",
     "redux-api-middleware": "git://github.com/teacherspayteachers/redux-api-middleware.git#8eb5e5adee0ba4e7aa6d1008856d62bc539e89cd",
     "string-hash": "^1.1.0"
