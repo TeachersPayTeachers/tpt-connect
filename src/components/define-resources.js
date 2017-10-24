@@ -61,7 +61,7 @@ export default function defineResources(mapStateToResources) {
       fetchResources(resources) {
         resources.forEach((resource) => {
           const { definition } = resource;
-          if (definition.auto && !isInState(this.state.storeState, definition)) {
+          if (definition.auto && !isInState(this.store.getState(), definition)) {
             resource.prepopulate();
             resource.fetch().catch(() => {
               /* we dont expose the promise here, so we should probably catch
@@ -72,6 +72,7 @@ export default function defineResources(mapStateToResources) {
       }
 
       updateOptionsIfNeeded() {
+        //if (this.options && !this.haveOwnPropsChanged) { return false; }
         if (!this.haveOwnPropsChanged) { return false; }
         const { isServer, onRequest, onSuccess, onError } = this.props;
         this.options = { isServer, onRequest, onSuccess, onError, ...this.context.options };
@@ -157,7 +158,7 @@ export default function defineResources(mapStateToResources) {
       }
 
       computeResourceProps() {
-        const resourceDefinitions = mapStateToResources(this.state.storeState, {
+        const resourceDefinitions = mapStateToResources(this.store.getState(), {
           ...this.props,
           // extending props so we can access redux's new computed, stateProps
           // in our mapStateToResources func
@@ -176,7 +177,7 @@ export default function defineResources(mapStateToResources) {
           const {
             meta = {},
             value = definition.defaultValue
-          } = findInState(this.state.storeState, definition) || oldResource;
+          } = findInState(this.store.getState(), definition) || oldResource;
 
           return {
             ...resourceProps,

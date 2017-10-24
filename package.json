@@ -52,11 +52,11 @@
     "karma-webpack": "1.7.0",
     "node-fetch": "git://github.com/teacherspayteachers/node-fetch.git#v1.6.0-10mb-hwm",
     "node-sass": "3.4.2",
-    "react": "16.0.0-beta.5",
-    "react-dom": "16.0.0-beta.5",
-    "react-redux": "4.4.8",
+    "react": "16.0.0",
+    "react-dom": "16.0.0",
+    "react-redux": "5.0.6",
     "react-transform-hmr": "1.0.1",
-    "redux": "3.6.0",
+    "redux": "3.5.2",
     "sass-loader": "3.1.2",
     "url-loader": "0.5.7",
     "webpack": "1.12.12",
@@ -65,7 +65,7 @@
   },
   "peerDependencies": {
     "redux": "^2.0.0 || ^3.0.0",
-    "react-redux": "^4.4.0"
+    "react-redux": "^5.0.0"
   },
   "dependencies": {
     "denormalizr": "^0.4.1",
