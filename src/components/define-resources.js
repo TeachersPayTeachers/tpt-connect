@@ -72,8 +72,7 @@ export default function defineResources(mapStateToResources) {
       }
 
       updateOptionsIfNeeded() {
-        //if (this.options && !this.haveOwnPropsChanged) { return false; }
-        if (!this.haveOwnPropsChanged) { return false; }
+        if (this.options && !this.haveOwnPropsChanged) { return false; }
         const { isServer, onRequest, onSuccess, onError } = this.props;
         this.options = { isServer, onRequest, onSuccess, onError, ...this.context.options };
         this.updateDispatchers();
