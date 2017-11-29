@@ -3764,6 +3764,12 @@ normalize-url@^1.4.0, normalize-url@^1.6.0:
     query-string "^4.1.0"
     sort-keys "^1.0.0"
 
+normalizr@2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/normalizr/-/normalizr-2.0.1.tgz#da0e2c87c25021aa13a7b8c4a9889c705e282a87"
+  dependencies:
+    lodash "^4.0.0"
+
 normalizr@^2.0.0:
   version "2.3.1"
   resolved "https://registry.yarnpkg.com/normalizr/-/normalizr-2.3.1.tgz#ac12d771ce1fe6a43094c3d828caada4ed9a4540"
