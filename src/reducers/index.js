@@ -35,7 +35,10 @@ export default function connectReducer(state = {}, { type, error, payload }) {
 
   return mergeWith({}, state, payload, {
     fetchesCount,
-    isAllFetched: fetchesCount === 0
+    isAllFetched: fetchesCount === 0,
+    // If the fetch itself fails, e.g. due to timeout, "payload" is actually an error.
+    // Otherwise, if json parsing failed, the error is stored in payload.error
+    error: error ? (payload.error || payload) : false
   }, (oldValue, newValue) => { // custom merger to handle arrays
     if (updateStrategy && Array.isArray(oldValue) && Array.isArray(newValue)) {
       if (updateStrategy === 'append') { // TODO: concat only uniques?

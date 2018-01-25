@@ -747,6 +747,23 @@ describe('tpt-connect', () => {
     describe('when fetch fails', () => {
       beforeEach(() => {
         window.fetch.and.callFake(() => {
+          return Promise.reject(new Error('you broke it'));
+        });
+      });
+
+      it('populates the store with the error', (done) => {
+        expect(store.getState().connect.isAllFetched).toBe(undefined);
+        query(resourceDefinition, store).catch(() => {
+          expect(store.getState().connect.error).toEqual(jasmine.any(Error));
+          expect(store.getState().connect.error.message).toMatch('you broke it');
+          done();
+        });
+      });
+    });
+
+    describe('when json parsing fails', () => {
+      beforeEach(() => {
+        window.fetch.and.callFake(() => {
           return Promise.resolve(new Response('', {
             headers: { 'Content-Type': 'application/json' },
             status: 401
