@@ -35,8 +35,7 @@ export default function connectReducer(state = {}, { type, error, payload }) {
 
   return mergeWith({}, state, payload, {
     fetchesCount,
-    isAllFetched: fetchesCount === 0,
-    error: error ? payload : false
+    isAllFetched: fetchesCount === 0
   }, (oldValue, newValue) => { // custom merger to handle arrays
     if (updateStrategy && Array.isArray(oldValue) && Array.isArray(newValue)) {
       if (updateStrategy === 'append') { // TODO: concat only uniques?

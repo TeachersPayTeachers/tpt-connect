@@ -47,7 +47,7 @@ function normalizeData({ normalize = _normalize, schema }, data) {
   };
 }
 
-export function computePayload(resourceDefinition, meta, data, response) {
+export function computePayload(resourceDefinition, meta, data, response, error) {
   const { updateStrategy } = resourceDefinition;
 
   const {
@@ -59,6 +59,7 @@ export function computePayload(resourceDefinition, meta, data, response) {
 
   return {
     updateStrategy, // so reducer can decide if to append paramsToResources or replace
+    error,
     // TODO: this is shit
     lastResponse: typeof window === 'undefined' && meta.isError && response,
     resources: entities,
@@ -116,7 +117,7 @@ function onResponse(resourceDefinition, meta, opts) {
         data = JSON.parse(err.message);
       } catch (e) {}
 
-      return computePayload(resourceDefinition, meta, data, response);
+      return computePayload(resourceDefinition, meta, data, response, err);
     });
   };
 }

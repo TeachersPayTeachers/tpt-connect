@@ -743,6 +743,26 @@ describe('tpt-connect', () => {
         done();
       });
     });
+
+    describe('when fetch fails', () => {
+      beforeEach(() => {
+        window.fetch.and.callFake(() => {
+          return Promise.resolve(new Response('', {
+            headers: { 'Content-Type': 'application/json' },
+            status: 401
+          }));
+        });
+      });
+
+      it('populates the store with the error', (done) => {
+        expect(store.getState().connect.isAllFetched).toBe(undefined);
+        query(resourceDefinition, store).catch(() => {
+          expect(store.getState().connect.error).toEqual(jasmine.any(Error));
+          expect(store.getState().connect.error.message).toMatch('Unexpected end of ');
+          done();
+        });
+      });
+    });
   });
 
   // TODO:
