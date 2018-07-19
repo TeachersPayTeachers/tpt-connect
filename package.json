@@ -50,7 +50,6 @@
     "karma-jasmine": "0.3.6",
     "karma-sourcemap-loader": "0.3.7",
     "karma-webpack": "1.7.0",
-    "node-fetch": "git://github.com/teacherspayteachers/node-fetch.git#v1.6.0-10mb-hwm",
     "node-sass": "3.4.2",
     "react": "16.0.0-beta.5",
     "react-dom": "16.0.0-beta.5",
@@ -75,7 +74,7 @@
     "normalize-url": "^1.6.0",
     "normalizr": "2.0.1",
     "querystring": "~0.2.0",
-    "redux-api-middleware": "git://github.com/teacherspayteachers/redux-api-middleware.git#8eb5e5adee0ba4e7aa6d1008856d62bc539e89cd",
+    "redux-api-middleware": "^2.3.0",
     "string-hash": "^1.1.0"
   },
   "repository": {

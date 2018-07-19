@@ -1,4 +1,4 @@
-import { CALL_API } from 'redux-api-middleware';
+import { RSAA } from 'redux-api-middleware';
 import { normalize as _normalize } from 'normalizr';
 import { schemaKey, logger } from '../helpers';
 
@@ -148,7 +148,7 @@ export function dispatchRequest(resourceDefinition, options) {
   const { headers, method, url: endpoint, body, credentials, redirect } = resourceDefinition;
   logger.info('Dispatching request:', resourceDefinition);
   return {
-    [CALL_API]: {
+    [RSAA]: {
       credentials,
       redirect,
       headers,
